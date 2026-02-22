@@ -1,0 +1,6 @@
+/* Advanced Library Page Specific Styles */
+@import './advanced.css';
+
+.advanced-library-page {
+  padding: 20px;
+}

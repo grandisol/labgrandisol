@@ -1,0 +1,6 @@
+/* Social Page Specific Styles */
+@import './advanced.css';
+
+.social-page {
+  padding: 20px;
+}

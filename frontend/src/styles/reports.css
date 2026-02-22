@@ -1,0 +1,6 @@
+/* Reports Page Specific Styles */
+@import './advanced.css';
+
+.reports-page {
+  padding: 20px;
+}

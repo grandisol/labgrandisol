@@ -1,0 +1,10 @@
+/* Notifications Page Specific Styles */
+@import './advanced.css';
+
+.notifications-page {
+  padding: 20px;
+}
+
+.notifications-container {
+  margin-top: 20px;
+}

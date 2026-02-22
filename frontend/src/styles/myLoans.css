@@ -1,0 +1,875 @@
+/**
+ * My Loans Page Styles - Dark Edgy Theme
+ */
+
+:root {
+  --neon-cyan: #00d9ff;
+  --neon-green: #39ff14;
+  --neon-pink: #ff006e;
+  --neon-blue: #0066ff;
+  --bg-primary: #0a0e27;
+  --bg-secondary: #111835;
+  --bg-tertiary: #1a1f3a;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+}
+
+.my-loans-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  color: var(--text-primary);
+  padding: 2rem 1rem;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.loans-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: slideInDown 0.6s ease-out;
+}
+
+.loans-header h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.loans-header p {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Tabs */
+.loans-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tab {
+  padding: 0.9rem 1.8rem;
+  background: linear-gradient(135deg, rgba(26, 31, 58, 0.5), rgba(26, 31, 58, 0.2));
+  border: 2px solid rgba(0, 217, 255, 0.2);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  backdrop-filter: blur(10px);
+}
+
+.tab:hover {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 217, 255, 0.05));
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+}
+
+.tab.active {
+  background: linear-gradient(135deg, var(--neon-cyan), #0099cc);
+  border-color: var(--neon-cyan);
+  color: var(--bg-primary);
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+  font-weight: 900;
+}
+
+/* Container */
+.loans-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 400px;
+}
+
+.loans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Loan Card */
+.loan-card {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 2rem;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(26, 31, 58, 0.6), rgba(26, 31, 58, 0.3));
+  border: 2px solid rgba(0, 217, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.loan-card:hover {
+  border-color: var(--neon-cyan);
+  background: linear-gradient(135deg, rgba(26, 31, 58, 0.8), rgba(26, 31, 58, 0.5));
+  box-shadow: 0 15px 40px rgba(0, 217, 255, 0.25);
+  transform: translateY(-6px);
+}
+
+/* Status based styling */
+.loan-card.overdue {
+  border-color: rgba(255, 0, 110, 0.4);
+}
+
+.loan-card.overdue:hover {
+  border-color: var(--neon-pink);
+  box-shadow: 0 15px 40px rgba(255, 0, 110, 0.25);
+}
+
+.loan-card.warning {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.loan-card.warning:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 15px 40px rgba(251, 191, 36, 0.25);
+}
+
+.loan-card.ok {
+  border-color: rgba(57, 255, 20, 0.3);
+}
+
+.loan-card.ok:hover {
+  border-color: var(--neon-green);
+  box-shadow: 0 15px 40px rgba(57, 255, 20, 0.25);
+}
+
+/* Cover */
+.loan-card-cover {
+  aspect-ratio: 2.5/3.5;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+  border: 2px solid rgba(0, 217, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.loan-card:hover .loan-card-cover {
+  border-color: var(--neon-cyan);
+}
+
+.loan-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.loan-card:hover .loan-card-cover img {
+  transform: scale(1.05);
+}
+
+/* Content */
+.loan-card-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 2rem;
+}
+
+.loan-card h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  grid-column: 1 / -1;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.loan-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  grid-column: 1 / -1;
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: 8px;
+}
+
+.date-item label {
+  color: var(--neon-cyan);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.date-item span {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.due-date {
+  color: #fbbf24;
+}
+
+.due-date.overdue {
+  color: var(--neon-pink);
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+}
+
+/* Status */
+.loan-status {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.status-badge {
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+
+.status-badge.ok {
+  background: linear-gradient(135deg, rgba(57, 255, 20, 0.1), rgba(57, 255, 20, 0.05));
+  color: var(--neon-green);
+  border-color: var(--neon-green);
+}
+
+.status-badge.warning {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05));
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+
+.status-badge.overdue {
+  background: linear-gradient(135deg, rgba(255, 0, 110, 0.1), rgba(255, 0, 110, 0.05));
+  color: var(--neon-pink);
+  border-color: var(--neon-pink);
+}
+
+.status-badge.returned {
+  background: linear-gradient(135deg, rgba(57, 255, 20, 0.1), rgba(57, 255, 20, 0.05));
+  color: var(--neon-green);
+  border-color: var(--neon-green);
+}
+
+.renewal-badge {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 217, 255, 0.05));
+  color: var(--neon-cyan);
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid var(--neon-cyan);
+}
+
+/* Actions */
+.loan-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-renew,
+.btn-return {
+  padding: 0.8rem 1.5rem;
+  border: 2px solid;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-renew {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 217, 255, 0.05));
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+}
+
+.btn-renew:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--neon-cyan), #0099cc);
+  color: var(--bg-primary);
+  box-shadow: 0 0 25px rgba(0, 217, 255, 0.3);
+  transform: translateY(-3px);
+}
+
+.btn-renew:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-return {
+  background: linear-gradient(135deg, rgba(57, 255, 20, 0.1), rgba(57, 255, 20, 0.05));
+  color: var(--neon-green);
+  border-color: var(--neon-green);
+}
+
+.btn-return:hover {
+  background: linear-gradient(135deg, var(--neon-green), #00dd00);
+  color: var(--bg-primary);
+  box-shadow: 0 0 25px rgba(57, 255, 20, 0.3);
+  transform: translateY(-3px);
+}
+
+/* Progress Bar */
+.progress-bar {
+  grid-column: 1;
+  height: 6px;
+  background: rgba(100, 116, 139, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 1rem;
+  border: 1px solid rgba(0, 217, 255, 0.2);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+  transition: width 0.4s ease;
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
+}
+
+/* History Loans */
+.loans-list.history .loan-card {
+  opacity: 0.8;
+  border-color: rgba(57, 255, 20, 0.2);
+}
+
+.loans-list.history .loan-card:hover {
+  opacity: 1;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, rgba(26, 31, 58, 0.5), rgba(26, 31, 58, 0.2));
+  border: 2px dashed rgba(0, 217, 255, 0.3);
+  border-radius: 12px;
+  color: var(--text-muted);
+  backdrop-filter: blur(10px);
+}
+
+.empty-state p {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 1rem 2.5rem;
+  background: linear-gradient(135deg, var(--neon-cyan), #0099cc);
+  color: var(--bg-primary);
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 900;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 40px rgba(0, 217, 255, 0.4);
+}
+
+.loading {
+  text-align: center;
+  color: var(--neon-cyan);
+  padding: 4rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .loans-header h1 {
+    font-size: 2rem;
+  }
+
+  .loan-card {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .loan-card-cover {
+    display: none;
+  }
+
+  .loan-card-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .loan-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .loans-tabs {
+    gap: 1rem;
+  }
+
+  .tab {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.85rem;
+  }
+
+  .loan-actions {
+    width: 100%;
+  }
+
+  .btn-renew,
+  .btn-return {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .loans-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .loan-card {
+    padding: 1rem;
+  }
+
+  .loan-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .loan-dates {
+    gap: 1rem;
+  }
+
+  .date-item {
+    padding: 0.8rem;
+  }
+
+  .loan-actions {
+    flex-direction: column;
+  }
+
+  .btn-renew,
+  .btn-return {
+    width: 100%;
+  }
+}
+
+.loans-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.loans-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.loans-header p {
+  font-size: 1.1rem;
+  color: #94a3b8;
+}
+
+/* Tabs */
+.loans-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tab {
+  padding: 0.8rem 1.5rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.tab:hover {
+  border-color: #3b82f6;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.tab.active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #60a5fa;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Container */
+.loans-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 400px;
+}
+
+.loans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Loan Card */
+.loan-card {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 2rem;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.4);
+  border: 2px solid rgba(148, 163, 184, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.loan-card:hover {
+  border-color: #3b82f6;
+  background: rgba(30, 41, 59, 0.6);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+}
+
+/* Status based styling */
+.loan-card.overdue {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.loan-card.warning {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.loan-card.ok {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+/* Cover */
+.loan-card-cover {
+  aspect-ratio: 2.5/3.5;
+  border-radius: 8px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+}
+
+.loan-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Content */
+.loan-card-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 2rem;
+}
+
+.loan-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  grid-column: 1 / -1;
+}
+
+.loan-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1rem;
+  grid-column: 1 / -1;
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.date-item label {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-item span {
+  color: #cbd5e1;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.due-date {
+  color: #fbbf24;
+}
+
+.due-date.overdue {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* Status */
+.loan-status {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-badge.ok {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.status-badge.warning {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d;
+}
+
+.status-badge.overdue {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.status-badge.returned {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.renewal-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Actions */
+.loan-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-renew,
+.btn-return {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-renew {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.btn-renew:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: #3b82f6;
+}
+
+.btn-renew:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-return {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.btn-return:hover {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: #22c55e;
+}
+
+/* Progress Bar */
+.progress-bar {
+  grid-column: 1;
+  height: 4px;
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  transition: width 0.3s ease;
+}
+
+/* History Loans */
+.loans-list.history .loan-card {
+  opacity: 0.8;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.loans-list.history .loan-card:hover {
+  opacity: 1;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(30, 41, 59, 0.4);
+  border: 2px dashed rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  color: #64748b;
+}
+
+.empty-state p {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.loading {
+  text-align: center;
+  color: #94a3b8;
+  padding: 4rem 2rem;
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .loans-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .loan-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .loan-card-cover {
+    display: none;
+  }
+
+  .loan-card-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .loan-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .loans-tabs {
+    gap: 1rem;
+  }
+
+  .tab {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+}

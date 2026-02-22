@@ -1,0 +1,6 @@
+/* Workspace Page Specific Styles */
+@import './advanced.css';
+
+.workspace-page {
+  padding: 20px;
+}

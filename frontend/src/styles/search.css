@@ -1,0 +1,6 @@
+/* Search Page Specific Styles */
+@import './advanced.css';
+
+.search-page {
+  padding: 20px;
+}

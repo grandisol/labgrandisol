@@ -1,0 +1,28 @@
+# Redirecionar HTTP para HTTPS
+http://wiki.local {
+    redir https://{host}{uri} permanent
+}
+
+# Configuração HTTPS
+wiki.local {
+    encode gzip
+
+    # Headers de segurança
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Proxy reverso para Node.js App
+    reverse_proxy app:3001 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-For {remote_host}
+    }
+
+    # Certificado auto-assinado (desenvolvimento)
+    tls internal
+}
