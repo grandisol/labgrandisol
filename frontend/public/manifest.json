@@ -1,0 +1,118 @@
+{
+  "name": "LabGrandisol - Biblioteca Virtual",
+  "short_name": "LabGrandisol",
+  "description": "Sistema de Biblioteca Virtual com recursos avançados de gestão e pesquisa acadêmica",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "orientation": "any",
+  "scope": "/",
+  "lang": "pt-BR",
+  "categories": ["education", "books", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/library.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Biblioteca Virtual"
+    },
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Painel de Controle"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Biblioteca",
+      "short_name": "Biblioteca",
+      "description": "Acessar acervo da biblioteca",
+      "url": "/library",
+      "icons": [{ "src": "/icons/library-shortcut.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Buscar",
+      "short_name": "Buscar",
+      "description": "Buscar livros e documentos",
+      "url": "/search",
+      "icons": [{ "src": "/icons/search-shortcut.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Almanaque",
+      "short_name": "Almanaque",
+      "description": "Almanaque Botânico",
+      "url": "/museum",
+      "icons": [{ "src": "/icons/museum-shortcut.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "features": [
+    "Catálogo de livros",
+    "Sistema de empréstimos",
+    "Almanaque Botânico",
+    "Rede social acadêmica",
+    "Relatórios e estatísticas",
+    "Notificações em tempo real",
+    "Modo offline"
+  ],
+  "permissions": ["notifications", "storage"],
+  "protocol_handlers": [
+    {
+      "protocol": "web+labgrandisol",
+      "url": "/library?id=%s"
+    }
+  ]
+}

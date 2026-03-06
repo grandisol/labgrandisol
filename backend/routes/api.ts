@@ -2,21 +2,11 @@ import { Router, Request, Response } from 'express';
 import Logger from '../utils/logger.js';
 import { query as dbQuery, QueryResult } from '../utils/database.js';
 import { apiValidators, validateQueryParams } from '../middleware/validators.js';
-import { AuthPayload, Note } from '../types/index.js';
+import { Note } from '../types/index.js';
+import { metricsCollector, generateMetricsReport } from '../utils/metrics.js';
 
 const logger = new Logger('APIRoutes');
 const router = Router();
-
-/**
- * Estende o tipo Request para incluir o user
- */
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthPayload;
-    }
-  }
-}
 
 /**
  * GET /api/profile
@@ -204,7 +194,7 @@ router.put('/notes/:id', apiValidators.updateNote, async (req: Request, res: Res
 
     const { id } = req.params;
     const { title, content } = req.body as { title?: string; content?: string };
-    const noteId = parseInt(id);
+    const noteId = parseInt(String(id));
 
     logger.info(`Atualizando nota ${noteId} para ${req.user.email}`);
 
@@ -251,7 +241,7 @@ router.delete('/notes/:id', async (req: Request, res: Response): Promise<void> =
     }
 
     const { id } = req.params;
-    const noteId = parseInt(id);
+    const noteId = parseInt(String(id));
 
     logger.info(`Deletando nota ${noteId} para ${req.user.email}`);
 
@@ -276,6 +266,39 @@ router.delete('/notes/:id', async (req: Request, res: Response): Promise<void> =
   } catch (err) {
     logger.error('Erro ao deletar nota', err as Error);
     res.status(500).json({ error: 'Erro ao processar requisição' });
+  }
+});
+
+/**
+ * GET /api/metrics
+ * Retorna métricas avançadas do sistema
+ */
+router.get('/metrics', (req: Request, res: Response): void => {
+  try {
+    const metrics = metricsCollector.getMetrics();
+    const health = metricsCollector.getHealthStatus();
+    
+    logger.info('Métricas avançadas obtidas', { health: health.status });
+    res.json({ metrics, health });
+  } catch (err) {
+    logger.error('Erro ao obter métricas avançadas', err as Error);
+    res.status(500).json({ error: 'Erro ao obter métricas' });
+  }
+});
+
+/**
+ * GET /api/metrics/report
+ * Retorna relatório de métricas em formato de texto
+ */
+router.get('/metrics/report', (req: Request, res: Response): void => {
+  try {
+    const report = generateMetricsReport();
+    
+    logger.info('Relatório de métricas gerado');
+    res.type('text/plain').send(report);
+  } catch (err) {
+    logger.error('Erro ao gerar relatório de métricas', err as Error);
+    res.status(500).json({ error: 'Erro ao gerar relatório' });
   }
 });
 

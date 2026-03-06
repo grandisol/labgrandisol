@@ -1,3 +1,8 @@
+/**
+ * Search Routes - LabGrandisol
+ * Busca avançada com múltiplos filtros e sugestões
+ */
+
 import { Router, Request, Response } from 'express';
 import { verifyToken } from '../middleware/auth.js';
 import Logger from '../utils/logger.js';
@@ -7,12 +12,31 @@ const logger = new Logger('Search');
 
 const router = Router();
 
+// Tipo para resultado de busca
+interface SearchResult {
+  id: number;
+  type: string;
+  title: string;
+  author: string;
+  genre: string;
+  rating: number;
+  cover_url: string;
+  description?: string;
+  relevance_score?: number;
+}
+
 /**
  * GET /api/search
  * Busca avançada com múltiplos filtros
  */
-router.get('/', verifyToken, (req: Request, res: Response) => {
+router.get('/', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const {
       q,
       filter_type = 'all',
@@ -26,32 +50,27 @@ router.get('/', verifyToken, (req: Request, res: Response) => {
     } = req.query;
 
     if (!q) {
-      return res.status(400).json({ error: 'Query parameter "q" é obrigatório' });
+      res.status(400).json({ error: 'Query parameter "q" é obrigatório' });
+      return;
     }
 
     const searchTerm = String(q).toLowerCase();
-    let results: any[] = [];
+    const results: SearchResult[] = [];
 
     // Search books
     if (filter_type === 'all' || filter_type === 'books') {
       const books = mockDB
         .getAllBooks()
-        .rows
-        .filter(
+        .rows.filter(
           (book: any) =>
             book.title.toLowerCase().includes(searchTerm) ||
             book.author.toLowerCase().includes(searchTerm) ||
-            (book.description &&
-              book.description.toLowerCase().includes(searchTerm))
+            (book.description && book.description.toLowerCase().includes(searchTerm))
         )
         .filter((book: any) => {
           if (genre && book.genre !== genre) return false;
           if (author && !book.author.toLowerCase().includes(String(author).toLowerCase())) return false;
-          if (
-            book.rating < Number(min_rating) ||
-            book.rating > Number(max_rating)
-          )
-            return false;
+          if (book.rating < Number(min_rating) || book.rating > Number(max_rating)) return false;
           return true;
         });
 
@@ -71,23 +90,18 @@ router.get('/', verifyToken, (req: Request, res: Response) => {
 
     // Sort results
     if (sort_by === 'rating') {
-      results.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      results.sort((a: SearchResult, b: SearchResult) => (b.rating || 0) - (a.rating || 0));
     } else if (sort_by === 'date') {
-      results.sort((a, b) => b.id - a.id);
+      results.sort((a: SearchResult, b: SearchResult) => b.id - a.id);
     }
     // 'relevance' is default (search order)
 
     // Pagination
-    const paginatedResults = results.slice(
-      Number(offset),
-      Number(offset) + Number(limit)
-    );
+    const paginatedResults = results.slice(Number(offset), Number(offset) + Number(limit));
 
-    logger.info(
-      `Busca realizada: "${q}" - ${results.length} resultados encontrados`
-    );
+    logger.info(`Busca realizada: "${q}" - ${results.length} resultados encontrados`);
 
-    return res.status(200).json({
+    res.status(200).json({
       query: q,
       filter_type,
       results: paginatedResults,
@@ -107,7 +121,7 @@ router.get('/', verifyToken, (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao realizar busca');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -115,14 +129,19 @@ router.get('/', verifyToken, (req: Request, res: Response) => {
  * GET /api/search/advanced
  * Busca com sintaxe avançada
  */
-router.get('/advanced', verifyToken, (req: Request, res: Response) => {
+router.get('/advanced', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const { query, limit = '10', offset = '0' } = req.query;
 
     if (!query) {
-      return res
-        .status(400)
-        .json({ error: 'Query parameter "query" é obrigatório' });
+      res.status(400).json({ error: 'Query parameter "query" é obrigatório' });
+      return;
     }
 
     // Mock advanced search with complex filters
@@ -135,16 +154,11 @@ router.get('/advanced', verifyToken, (req: Request, res: Response) => {
         book.author.toLowerCase().includes(searchTerm)
     );
 
-    const paginatedResults = results.slice(
-      Number(offset),
-      Number(offset) + Number(limit)
-    );
+    const paginatedResults = results.slice(Number(offset), Number(offset) + Number(limit));
 
-    logger.info(
-      `Busca avançada realizada: "${query}"`
-    );
+    logger.info(`Busca avançada realizada: "${query}"`);
 
-    return res.status(200).json({
+    res.status(200).json({
       query,
       results: paginatedResults.map((book: any) => ({
         id: book.id,
@@ -162,7 +176,7 @@ router.get('/advanced', verifyToken, (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao realizar busca avançada');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -170,24 +184,28 @@ router.get('/advanced', verifyToken, (req: Request, res: Response) => {
  * GET /api/search/suggestions
  * Sugestões de busca (autocomplete)
  */
-router.get('/suggestions', verifyToken, (req: Request, res: Response) => {
+router.get('/suggestions', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const { q, type = 'all', limit = 5 } = req.query;
 
     if (!q) {
-      return res.status(400).json({ error: 'Query parameter "q" é obrigatório' });
+      res.status(400).json({ error: 'Query parameter "q" é obrigatório' });
+      return;
     }
 
     const searchTerm = String(q).toLowerCase();
-    const suggestions: any[] = [];
+    const suggestions: { text: string; type: string; icon: string }[] = [];
 
     if (type === 'all' || type === 'books') {
       const bookSuggestions = mockDB
         .getAllBooks()
-        .rows
-        .filter((book: any) =>
-          book.title.toLowerCase().includes(searchTerm)
-        )
+        .rows.filter((book: any) => book.title.toLowerCase().includes(searchTerm))
         .slice(0, Number(limit))
         .map((book: any) => ({
           text: book.title,
@@ -202,36 +220,29 @@ router.get('/suggestions', verifyToken, (req: Request, res: Response) => {
         ...new Set(
           mockDB
             .getAllBooks()
-            .rows
-            .map((b: any) => b.author)
-            .filter((author: string) =>
-              author.toLowerCase().includes(searchTerm)
-            )
+            .rows.map((b: any) => b.author)
+            .filter((author: string) => author.toLowerCase().includes(searchTerm))
         ),
       ] as string[];
 
-      const authorSuggestions = uniqueAuthors
-        .slice(0, Number(limit))
-        .map((author) => ({
-          text: author,
-          type: 'author',
-          icon: '✍️',
-        }));
+      const authorSuggestions = uniqueAuthors.slice(0, Number(limit)).map((author: string) => ({
+        text: author,
+        type: 'author',
+        icon: '✍️',
+      }));
       suggestions.push(...authorSuggestions);
     }
 
-    logger.info(
-      `Sugestões geradas para: "${q}"`
-    );
+    logger.info(`Sugestões geradas para: "${q}"`);
 
-    return res.status(200).json({
+    res.status(200).json({
       query: q,
       suggestions: suggestions.slice(0, Number(limit)),
       count: suggestions.length,
     });
   } catch (error) {
     logger.error('Erro ao gerar sugestões');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -239,8 +250,14 @@ router.get('/suggestions', verifyToken, (req: Request, res: Response) => {
  * GET /api/search/trending
  * Buscar tendências (livros mais procurados)
  */
-router.get('/trending', verifyToken, (_req: Request, res: Response) => {
+router.get('/trending', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const allBooks = mockDB.getAllBooks().rows;
 
     // Mock trending: just return top rated books
@@ -259,14 +276,14 @@ router.get('/trending', verifyToken, (_req: Request, res: Response) => {
 
     logger.info('Tendências de busca recuperadas');
 
-    return res.status(200).json({
+    res.status(200).json({
       period: 'last_24h',
       trending_books: trending,
       updated_at: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Erro ao recuperar tendências');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 

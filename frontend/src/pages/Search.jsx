@@ -1,190 +1,148 @@
-import { useState, useEffect } from 'react';
-import { useSearchStore } from '../store/search';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/designTokens.css';
+import '../styles/global.css';
 import '../styles/search.css';
 
 export default function Search() {
-  const { results, suggestions, trending, query, loading, filters, globalSearch, getSuggestions, getTrending, setFilters, clearSearch } = useSearchStore();
-  const [inputValue, setInputValue] = useState('');
-  const [activeTab, setActiveTab] = useState('search'); // search, trending, suggestions
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searchType, setSearchType] = useState('all');
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  useEffect(() => {
-    getTrending();
-  }, [getTrending]);
+  // Get auth token from sessionStorage
+  const getAuthHeaders = () => {
+    const token = sessionStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (inputValue.trim()) {
-      globalSearch(inputValue);
-      setActiveTab('search');
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setHasSearched(true);
+
+    try {
+      const params = new URLSearchParams({
+        q: query,
+        filter_type: searchType
+      });
+
+      const response = await fetch(`/api/search?${params}`, {
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      setResults(data.results || []);
+    } catch (error) {
+      console.error('Erro na busca:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-    if (value.trim()) {
-      getSuggestions(value);
+  const handleResultClick = (result) => {
+    if (result.type === 'book') {
+      navigate(`/books/${result.id}`);
     }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setInputValue(suggestion);
-    globalSearch(suggestion);
-    setActiveTab('search');
   };
 
   return (
     <div className="search-page">
       <div className="search-header">
-        <h1>🔍 Busca Avançada</h1>
-        <p>Encontre livros, autores, coleções e muito mais</p>
+        <div className="header-content">
+          <div className="header-ornament">❧</div>
+          <h1>Busca Avançada</h1>
+          <p>Encontre livros, autores e muito mais</p>
+        </div>
       </div>
 
-      {/* Search Form */}
-      <form onSubmit={handleSearch} className="search-form">
-        <div className="search-input-group">
-          <input
-            type="text"
-            placeholder="Buscar livros, autores, tags..."
-            value={inputValue}
-            onChange={handleInputChange}
-            className="search-input"
-          />
-          <button type="submit" className="btn btn-primary">
-            🔍 Buscar
-          </button>
-          {query && (
-            <button 
-              type="button" 
-              className="btn btn-ghost"
-              onClick={() => {
-                clearSearch();
-                setInputValue('');
-              }}
-            >
-              Limpar
+      <div className="search-content">
+        <form onSubmit={handleSearch} className="search-form">
+          <div className="search-input-wrapper">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Digite sua busca..."
+              className="search-input"
+            />
+            <button type="submit" className="btn btn-primary">
+              Buscar
             </button>
+          </div>
+
+          <div className="search-filters">
+            <label className="filter-label">Buscar em:</label>
+            <div className="filter-options">
+              {[
+                { value: 'all', label: 'Tudo' },
+                { value: 'books', label: 'Livros' },
+                { value: 'authors', label: 'Autores' },
+                { value: 'categories', label: 'Categorias' }
+              ].map(option => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`filter-btn ${searchType === option.value ? 'active' : ''}`}
+                  onClick={() => setSearchType(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </form>
+
+        <div className="search-results">
+          {loading ? (
+            <div className="loading">Buscando...</div>
+          ) : hasSearched ? (
+            results.length > 0 ? (
+              <>
+                <div className="results-header">
+                  <span className="results-count">{results.length} resultados encontrados</span>
+                </div>
+                <div className="results-list">
+                  {results.map((result, index) => (
+                    <div
+                      key={index}
+                      className="result-card"
+                      onClick={() => handleResultClick(result)}
+                    >
+                      <div className="result-icon">
+                        {result.type === 'book' ? '📖' : 
+                         result.type === 'author' ? '✍️' : '📁'}
+                      </div>
+                      <div className="result-info">
+                        <h3 className="result-title">{result.title || result.name}</h3>
+                        <p className="result-description">{result.description || result.author}</p>
+                        {result.category && (
+                          <span className="result-category">{result.category}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="no-results">
+                <div className="no-results-icon">🔍</div>
+                <h3>Nenhum resultado encontrado</h3>
+                <p>Tente outros termos de busca</p>
+              </div>
+            )
+          ) : (
+            <div className="search-placeholder">
+              <div className="placeholder-icon">📚</div>
+              <h3>Explore o Acervo</h3>
+              <p>Digite algo para começar a busca</p>
+            </div>
           )}
         </div>
-
-        {/* Filters */}
-        <div className="search-filters">
-          <div className="filter-group">
-            <label>Classificação Mínima:</label>
-            <input
-              type="range"
-              min="0"
-              max="5"
-              step="0.5"
-              value={filters.minRating}
-              onChange={(e) => setFilters({ minRating: parseFloat(e.target.value) })}
-              className="filter-range"
-            />
-            <span className="filter-value">⭐ {filters.minRating}</span>
-          </div>
-          <div className="filter-group">
-            <label>Ordenar por:</label>
-            <select 
-              value={filters.sortBy}
-              onChange={(e) => setFilters({ sortBy: e.target.value })}
-              className="filter-select"
-            >
-              <option value="relevance">Relevância</option>
-              <option value="title">Título</option>
-              <option value="author">Autor</option>
-              <option value="rating">Classificação</option>
-              <option value="recent">Recentes</option>
-            </select>
-          </div>
-        </div>
-      </form>
-
-      {/* Tabs */}
-      <div className="search-tabs">
-        <button 
-          className={`tab ${activeTab === 'search' ? 'active' : ''}`}
-          onClick={() => setActiveTab('search')}
-        >
-          Resultados ({results.length})
-        </button>
-        <button 
-          className={`tab ${activeTab === 'trending' ? 'active' : ''}`}
-          onClick={() => setActiveTab('trending')}
-        >
-          Em Alta
-        </button>
-        {suggestions.length > 0 && (
-          <button 
-            className={`tab ${activeTab === 'suggestions' ? 'active' : ''}`}
-            onClick={() => setActiveTab('suggestions')}
-          >
-            Sugestões
-          </button>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="search-content">
-        {loading && <div className="page-loading">⏳ Buscando...</div>}
-
-        {activeTab === 'search' && !loading && (
-          <div className="results-grid">
-            {results.length === 0 ? (
-              <div className="empty-state">
-                <p>📚 {query ? 'Nenhum resultado encontrado' : 'Digite para buscar'}</p>
-              </div>
-            ) : (
-              results.map(book => (
-                <div key={book.id} className="result-card">
-                  <div className="result-image">{book.cover || '📖'}</div>
-                  <h3>{book.title}</h3>
-                  <p className="result-author">{book.author}</p>
-                  {book.rating && (
-                    <p className="result-rating">
-                      {'⭐'.repeat(Math.round(book.rating))} {book.rating.toFixed(1)}
-                    </p>
-                  )}
-                  <a href={`/books/${book.id}`} className="btn btn-small btn-primary">
-                    Ver detalhes
-                  </a>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'trending' && (
-          <div className="trending-list">
-            {trending.length === 0 ? (
-              <p className="empty-state">Nenhum livro em alta no momento</p>
-            ) : (
-              trending.map((item, idx) => (
-                <div key={idx} className="trending-item">
-                  <span className="trending-rank">#{idx + 1}</span>
-                  <div className="trending-info">
-                    <h4>{item.title}</h4>
-                    <p>{item.author}</p>
-                  </div>
-                  <span className="trending-score">👁️ {item.views || 0}</span>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'suggestions' && (
-          <div className="suggestions-list">
-            {suggestions.map((suggestion, idx) => (
-              <button
-                key={idx}
-                className="suggestion-item"
-                onClick={() => handleSuggestionClick(suggestion)}
-              >
-                💡 {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

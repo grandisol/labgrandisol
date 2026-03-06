@@ -3,7 +3,14 @@ import api from '../api/client';
 
 export const useAuthStore = create((set, get) => ({
   token: sessionStorage.getItem('auth_token') || null,
-  user: JSON.parse(sessionStorage.getItem('auth_user')) || null,
+  user: (() => {
+    try {
+      const stored = sessionStorage.getItem('auth_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })(),
   isLoading: false,
   error: null,
 

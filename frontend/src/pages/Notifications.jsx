@@ -1,74 +1,89 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNotificationsStore } from '../store/notifications';
+import '../styles/designTokens.css';
+import '../styles/global.css';
 import '../styles/notifications.css';
 
 export default function Notifications() {
-  const { notifications, unreadCount, loading, fetchNotifications, markAsRead, deleteNotification } = useNotificationsStore();
+  const { notifications, fetchNotifications, markAsRead, markAllAsRead } = useNotificationsStore();
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  if (loading) {
-    return <div className="page-loading">📥 Carregando notificações...</div>;
-  }
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === 'all') return true;
+    if (filter === 'unread') return !n.read;
+    return n.type === filter;
+  });
 
   return (
     <div className="notifications-page">
-      <div className="page-header">
-        <h1>🔔 Notificações</h1>
-        <p>Você tem {unreadCount} notificações não lidas</p>
+      <div className="notifications-header">
+        <div className="header-content">
+          <div className="header-ornament">❧</div>
+          <h1>Notificações</h1>
+          <p>Fique por dentro de todas as novidades</p>
+        </div>
       </div>
 
-      <div className="notifications-container">
-        {notifications.length === 0 ? (
-          <div className="empty-state">
-            <p>📭 Nenhuma notificação no momento</p>
+      <div className="notifications-content">
+        <div className="notifications-controls">
+          <div className="filter-tabs">
+            <button 
+              className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
+              onClick={() => setFilter('all')}
+            >
+              Todas
+            </button>
+            <button 
+              className={`filter-tab ${filter === 'unread' ? 'active' : ''}`}
+              onClick={() => setFilter('unread')}
+            >
+              Não Lidas
+            </button>
+            <button 
+              className={`filter-tab ${filter === 'achievement' ? 'active' : ''}`}
+              onClick={() => setFilter('achievement')}
+            >
+              Conquistas
+            </button>
           </div>
-        ) : (
-          <div className="notifications-list">
-            {notifications.map(notification => (
+          <button className="btn btn-secondary btn-sm" onClick={markAllAsRead}>
+            Marcar Todas como Lidas
+          </button>
+        </div>
+
+        <div className="notifications-list">
+          {filteredNotifications.length > 0 ? (
+            filteredNotifications.map(notification => (
               <div 
                 key={notification.id} 
                 className={`notification-card ${notification.read ? 'read' : 'unread'}`}
+                onClick={() => markAsRead(notification.id)}
               >
                 <div className="notification-icon">
-                  {notification.type === 'achievement' && '🏆'}
-                  {notification.type === 'recommendation' && '💡'}
-                  {notification.type === 'social' && '👥'}
-                  {notification.type === 'update' && '📢'}
+                  {notification.type === 'achievement' ? '🏆' : 
+                   notification.type === 'warning' ? '⚠️' : 
+                   notification.type === 'info' ? 'ℹ️' : '📢'}
                 </div>
-                <div className="notification-content">
+                <div className="notification-body">
                   <h3>{notification.title}</h3>
                   <p>{notification.message}</p>
-                  {notification.metadata && (
-                    <small className="notification-meta">
-                      {new Date(notification.created_at).toLocaleDateString('pt-BR')}
-                    </small>
-                  )}
+                  <span className="notification-time">{notification.createdAt || 'Agora'}</span>
                 </div>
-                <div className="notification-actions">
-                  {!notification.read && (
-                    <button 
-                      className="btn-icon"
-                      onClick={() => markAsRead(notification.id)}
-                      title="Marcar como lido"
-                    >
-                      ✓
-                    </button>
-                  )}
-                  <button 
-                    className="btn-icon danger"
-                    onClick={() => deleteNotification(notification.id)}
-                    title="Deletar"
-                  >
-                    ✕
-                  </button>
-                </div>
+                {!notification.read && <span className="unread-dot"></span>}
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          ) : (
+            <div className="empty-notifications">
+              <span className="empty-icon">📭</span>
+              <h3>Nenhuma notificação</h3>
+              <p>Você está em dia com todas as novidades!</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

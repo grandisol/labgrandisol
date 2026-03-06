@@ -1,10 +1,5 @@
-# Redirecionar HTTP para HTTPS
-http://wiki.local {
-    redir https://{host}{uri} permanent
-}
-
-# Configuração HTTPS
-wiki.local {
+# Configuração para responder em qualquer host (desenvolvimento)
+:80 {
     encode gzip
 
     # Headers de segurança
@@ -16,11 +11,46 @@ wiki.local {
         Referrer-Policy "strict-origin-when-cross-origin"
     }
 
-    # Proxy reverso para Node.js App
-    reverse_proxy app:3001 {
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-Host {host}
-        header_up X-Forwarded-For {remote_host}
+    # Servir arquivos estáticos do frontend
+    root * /app/public
+    try_files {path} {path}/ /index.html
+    file_server
+
+    # Proxy reverso para API
+    handle /api/* {
+        reverse_proxy backend:3001 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-For {remote_host}
+        }
+    }
+}
+
+# Configuração HTTPS para library.local (produção)
+library.local {
+    encode gzip
+
+    # Headers de segurança
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Servir arquivos estáticos do frontend
+    root * /app/public
+    try_files {path} {path}/ /index.html
+    file_server
+
+    # Proxy reverso para API
+    handle /api/* {
+        reverse_proxy backend:3001 {
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Host {host}
+            header_up X-Forwarded-For {remote_host}
+        }
     }
 
     # Certificado auto-assinado (desenvolvimento)

@@ -2,28 +2,23 @@
  * Testes para Validators
  */
 
-import { body, validationResult } from 'express-validator';
-
 describe('Input Validators', () => {
   describe('Email Validation', () => {
-    it('should accept valid emails', async () => {
-      const validator = body('email').isEmail().normalizeEmail();
-      
+    it('should accept valid emails', () => {
       const validEmails = [
         'user@example.com',
         'user.name@example.co.uk',
         'user+tag@example.com'
       ];
 
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
       for (const email of validEmails) {
-        const chain = validator.if(() => true);
-        expect(chain).toBeDefined();
+        expect(emailRegex.test(email)).toBe(true);
       }
     });
 
-    it('should reject invalid emails', async () => {
-      const validator = body('email').isEmail();
-      
+    it('should reject invalid emails', () => {
       const invalidEmails = [
         'invalid',
         'invalid@',
@@ -31,14 +26,23 @@ describe('Input Validators', () => {
         'user@.com'
       ];
 
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
       expect(invalidEmails.length).toBe(4);
+      for (const email of invalidEmails) {
+        expect(emailRegex.test(email)).toBe(false);
+      }
     });
   });
 
   describe('Password Validation', () => {
-    it('should require minimum length', async () => {
-      const validator = body('password').isLength({ min: 8 });
-      expect(validator).toBeDefined();
+    it('should require minimum length', () => {
+      const minLength = 8;
+      const shortPassword = 'Pass1!';
+      const validPassword = 'Password123!';
+
+      expect(shortPassword.length).toBeLessThan(minLength);
+      expect(validPassword.length).toBeGreaterThanOrEqual(minLength);
     });
 
     it('should require uppercase letter', () => {
@@ -68,19 +72,22 @@ describe('Input Validators', () => {
 
   describe('String Length Validation', () => {
     it('should validate title length (1-200)', () => {
-      const validator = body('title').isLength({ min: 1, max: 200 });
-      expect(validator).toBeDefined();
-      
       const validTitles = ['A', 'My Title', 'A'.repeat(200)];
       const invalidTitle = 'A'.repeat(201);
-      
+
       expect(validTitles.length).toBe(3);
       expect(invalidTitle.length).toBe(201);
     });
 
     it('should validate name length (3-100)', () => {
-      const validator = body('name').isLength({ min: 3, max: 100 });
-      expect(validator).toBeDefined();
+      const validName = 'John Doe';
+      const shortName = 'Jo';
+      const longName = 'A'.repeat(101);
+
+      expect(validName.length).toBeGreaterThanOrEqual(3);
+      expect(validName.length).toBeLessThanOrEqual(100);
+      expect(shortName.length).toBeLessThan(3);
+      expect(longName.length).toBeGreaterThan(100);
     });
   });
 
@@ -88,7 +95,7 @@ describe('Input Validators', () => {
     it('should validate role enum', () => {
       const validRoles = ['admin', 'moderator', 'user'];
       const invalidRole = 'superuser';
-      
+
       expect(validRoles).toContain('admin');
       expect(validRoles).not.toContain(invalidRole);
     });
@@ -101,9 +108,6 @@ describe('Input Validators', () => {
 
   describe('Integer Validation', () => {
     it('should validate positive integers for IDs', () => {
-      const validator = body('id').isInt({ min: 1 });
-      expect(validator).toBeDefined();
-      
       expect(1).toBeGreaterThanOrEqual(1);
       expect(0).toBeLessThan(1);
       expect(-1).toBeLessThan(1);

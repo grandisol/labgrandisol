@@ -12,7 +12,7 @@ import { mockDB } from '../utils/mockDatabase.js';
 const router = Router();
 const logger = new Logger('AdvancedLibraryRoutes');
 
-router.use(verifyToken);
+// Auth já é aplicada no server.ts
 
 // ==================== COLLECTIONS ====================
 
@@ -371,7 +371,7 @@ router.get('/shelves/:name/books', (req: Request, res: Response): void => {
       return;
     }
 
-    const { name } = req.params;
+    const name = String(req.params.name);
     const { limit = 20, offset = 0 } = req.query;
 
     const result = advancedMockDB.getShelfBooks(req.user.id, name);
@@ -425,7 +425,7 @@ router.get('/tags', (_req: Request, res: Response): void => {
  */
 router.get('/books/:id/tags', (req: Request, res: Response): void => {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id);
     const bookId = parseInt(id);
 
     const tags = advancedMockDB.getTagsByBook(bookId);

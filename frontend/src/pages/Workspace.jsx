@@ -1,143 +1,131 @@
-import { useEffect } from 'react';
-import { useSaasStore } from '../store/data';
+import { useState, useEffect } from 'react';
+import '../styles/designTokens.css';
+import '../styles/global.css';
 import '../styles/workspace.css';
 
 export default function Workspace() {
-  const { workspace, members, usage, loading, fetchAllData } = useSaasStore();
+  const [preferences, setPreferences] = useState({
+    theme: 'vintage',
+    notifications: true,
+    emailUpdates: false,
+    language: 'pt-BR'
+  });
 
-  useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+  // Get auth token from sessionStorage
+  const getAuthHeaders = () => {
+    const token = sessionStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  };
 
-  if (loading) {
-    return <div className="page-loading">⚙️ Carregando workspace...</div>;
-  }
+  const handleSave = async () => {
+    try {
+      await fetch('/api/saas/preferences', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(preferences)
+      });
+      alert('Preferências salvas com sucesso!');
+    } catch (error) {
+      console.error('Erro:', error);
+    }
+  };
 
   return (
     <div className="workspace-page">
-      <div className="page-header">
-        <h1>⚙️ Configurações do Workspace</h1>
-        <p>Gerencie seu espaço de trabalho e equipe</p>
+      <div className="workspace-header">
+        <div className="header-content">
+          <div className="header-ornament">❧</div>
+          <h1>Meu Workspace</h1>
+          <p>Personalize sua experiência</p>
+        </div>
       </div>
 
-      <div className="workspace-grid">
-        {/* Workspace Info */}
+      <div className="workspace-content">
         <section className="workspace-section">
-          <h2>📋 Informações do Workspace</h2>
-          {workspace ? (
-            <div className="workspace-info">
-              <div className="info-field">
-                <label>Nome:</label>
-                <p>{workspace.name || 'Minha Biblioteca'}</p>
-              </div>
-              <div className="info-field">
-                <label>Email:</label>
-                <p>{workspace.email || 'N/A'}</p>
-              </div>
-              <div className="info-field">
-                <label>Plano Atual:</label>
-                <p className="plan-badge">{workspace.plan || 'Free'}</p>
-              </div>
-              <div className="info-field">
-                <label>Criado em:</label>
-                <p>{workspace.created_at ? new Date(workspace.created_at).toLocaleDateString('pt-BR') : 'N/A'}</p>
-              </div>
-              <button className="btn btn-primary">✏️ Editar Workspace</button>
-            </div>
-          ) : (
-            <p className="empty-state">Nenhum workspace configurado</p>
-          )}
-        </section>
-
-        {/* Members */}
-        <section className="workspace-section">
-          <h2>👥 Membros da Equipe</h2>
-          {members && members.length > 0 ? (
-            <div className="members-list">
-              {members.map(member => (
-                <div key={member.id} className="member-card">
-                  <div className="member-avatar">
-                    {member.name?.charAt(0).toUpperCase() || 'M'}
-                  </div>
-                  <div className="member-info">
-                    <h4>{member.name}</h4>
-                    <p className="member-email">{member.email}</p>
-                    <span className="member-role">{member.role}</span>
-                  </div>
-                  <div className="member-actions">
-                    <button className="btn-icon">⋮</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="empty-state">Nenhum membro ainda</p>
-          )}
-          <button className="btn btn-secondary">+ Convidar Membro</button>
-        </section>
-
-        {/* Usage Statistics */}
-        <section className="workspace-section usage-section">
-          <h2>📊 Uso e Limites</h2>
-          {usage ? (
-            <div className="usage-stats">
-              <div className="usage-item">
-                <label>Livros Armazenados:</label>
-                <div className="usage-bar">
-                  <div className="usage-fill" style={{ width: `${(usage.books_count / usage.books_limit) * 100}%` }}></div>
-                </div>
-                <p className="usage-text">{usage.books_count} / {usage.books_limit} livros</p>
-              </div>
-              <div className="usage-item">
-                <label>Coleções:</label>
-                <div className="usage-bar">
-                  <div className="usage-fill" style={{ width: `${(usage.collections_count / usage.collections_limit) * 100}%` }}></div>
-                </div>
-                <p className="usage-text">{usage.collections_count} / {usage.collections_limit} coleções</p>
-              </div>
-              <div className="usage-item">
-                <label>Armazenamento:</label>
-                <div className="usage-bar">
-                  <div className="usage-fill" style={{ width: `${(usage.storage_used / usage.storage_limit) * 100}%` }}></div>
-                </div>
-                <p className="usage-text">{usage.storage_used}MB / {usage.storage_limit}MB</p>
-              </div>
-            </div>
-          ) : (
-            <p className="empty-state">Dados de uso não disponíveis</p>
-          )}
-        </section>
-
-        {/* Settings */}
-        <section className="workspace-section settings-section">
-          <h2>⚙️ Configurações Gerais</h2>
-          <div className="settings-list">
-            <div className="setting-item">
-              <label>Notificações por Email:</label>
-              <input type="checkbox" defaultChecked className="checkbox" />
-            </div>
-            <div className="setting-item">
-              <label>Perfil Público:</label>
-              <input type="checkbox" defaultChecked className="checkbox" />
-            </div>
-            <div className="setting-item">
-              <label>Permissões de Coleções:</label>
-              <select className="select-field">
-                <option>Privado (apenas você)</option>
-                <option>Amigos podem ver</option>
-                <option>Público</option>
+          <h2>Preferências de Leitura</h2>
+          <div className="preferences-grid">
+            <div className="preference-item">
+              <label>Tema</label>
+              <select 
+                value={preferences.theme}
+                onChange={(e) => setPreferences({...preferences, theme: e.target.value})}
+              >
+                <option value="vintage">Vintage Clássico</option>
+                <option value="light">Claro</option>
+                <option value="dark">Escuro</option>
               </select>
             </div>
-            <button className="btn btn-primary">💾 Salvar Configurações</button>
+            <div className="preference-item">
+              <label>Idioma</label>
+              <select 
+                value={preferences.language}
+                onChange={(e) => setPreferences({...preferences, language: e.target.value})}
+              >
+                <option value="pt-BR">Português (Brasil)</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
+            </div>
           </div>
         </section>
-      </div>
 
-      {/* Danger Zone */}
-      <div className="danger-zone">
-        <h3>⚠️ Zona de Perigo</h3>
-        <button className="btn btn-danger">🚪 Sair do Workspace</button>
-        <button className="btn btn-danger">🗑️ Deletar Workspace</button>
+        <section className="workspace-section">
+          <h2>Notificações</h2>
+          <div className="toggle-list">
+            <div className="toggle-item">
+              <div className="toggle-info">
+                <span className="toggle-title">Notificações do Sistema</span>
+                <span className="toggle-desc">Receba alertas sobre empréstimos e devoluções</span>
+              </div>
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={preferences.notifications}
+                  onChange={(e) => setPreferences({...preferences, notifications: e.target.checked})}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+            <div className="toggle-item">
+              <div className="toggle-info">
+                <span className="toggle-title">Atualizações por Email</span>
+                <span className="toggle-desc">Receba novidades e recomendações</span>
+              </div>
+              <label className="toggle-switch">
+                <input 
+                  type="checkbox" 
+                  checked={preferences.emailUpdates}
+                  onChange={(e) => setPreferences({...preferences, emailUpdates: e.target.checked})}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section className="workspace-section">
+          <h2>Estatísticas Pessoais</h2>
+          <div className="personal-stats">
+            <div className="personal-stat">
+              <span className="stat-value">47</span>
+              <span className="stat-label">Livros Lidos</span>
+            </div>
+            <div className="personal-stat">
+              <span className="stat-value">12</span>
+              <span className="stat-label">Este Ano</span>
+            </div>
+            <div className="personal-stat">
+              <span className="stat-value">156</span>
+              <span className="stat-label">Horas de Leitura</span>
+            </div>
+          </div>
+        </section>
+
+        <div className="workspace-actions">
+          <button className="btn btn-primary" onClick={handleSave}>
+            Salvar Preferências
+          </button>
+        </div>
       </div>
     </div>
   );

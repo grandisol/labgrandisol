@@ -1,180 +1,178 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import Logger from '../utils/logger.js';
-import { AuthPayload, User } from '../types/index.js';
+import { AuthPayload } from '../types/index.js';
 
 const logger = new Logger('Auth');
 
-const JWT_SECRET: string = process.env.JWT_SECRET || 'sua_chave_super_secreta_aqui_mudeme_em_producao';
-const JWT_EXPIRY: string = process.env.JWT_EXPIRY || '24h';
-const REFRESH_TOKEN_EXPIRY: string = process.env.REFRESH_TOKEN_EXPIRY || '7d';
+// JWT Secret - em produção, usar variável de ambiente segura
+const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_super_secreta_aqui_mudeme_em_producao';
+const JWT_REFRESH_SECRET = JWT_SECRET + '_refresh';
 
-// Validação: se estiver em produção, JWT_SECRET não pode ser o padrão
-if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'sua_chave_super_secreta_aqui_mudeme_em_producao') {
-  logger.critical('JWT_SECRET não foi configurado em produção!');
-  process.exit(1);
-}
-
-/**
- * Estende o tipo Request para incluir o user
- */
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthPayload;
-    }
+// Declarar o tipo user no Request
+declare module 'express' {
+  interface Request {
+    user?: AuthPayload;
   }
 }
 
 /**
- * Verifica validade do token JWT
- * @param req - Express Request object
- * @param res - Express Response object
- * @param next - Express NextFunction
+ * Middleware para verificar token JWT
+ * Valida formato, assinatura e expiração
  */
 export function verifyToken(req: Request, res: Response, next: NextFunction): void {
-  // Rotas públicas que não precisam de autenticação
-  const publicRoutes: string[] = ['/api/health', '/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
-
-  if (publicRoutes.some((route) => req.path.startsWith(route))) {
-    next();
-    return;
-  }
-
-  const authHeader: string | undefined = req.headers.authorization;
-
-  if (!authHeader) {
-    logger.warn(`Requisição sem token para: ${req.path}`, {
-      ip: req.ip,
-      path: req.path,
+  const authHeader = req.headers.authorization;
+  
+  // Verificar se header existe e tem formato correto
+  if (!authHeader?.startsWith('Bearer ')) {
+    logger.warn('Tentativa de acesso sem token', { 
+      path: req.path, 
+      ip: req.ip 
     });
-    res.status(401).json({ error: 'Token não fornecido' });
+    res.status(401).json({ error: 'Token não fornecido', code: 'NO_TOKEN' });
     return;
   }
-
-  const parts: string[] = authHeader.split(' ');
-
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    logger.warn('Formato de Authorization header inválido', {
-      path: req.path,
-    });
-    res.status(401).json({ error: 'Formato de token inválido' });
+  
+  const token = authHeader.split(' ')[1];
+  
+  // Verificar se token não está vazio
+  if (!token || token.trim() === '') {
+    logger.warn('Token vazio fornecido', { path: req.path });
+    res.status(401).json({ error: 'Token inválido', code: 'EMPTY_TOKEN' });
     return;
   }
-
-  const token: string = parts[1];
-
+  
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
+    
+    // Verificar campos obrigatórios no payload
+    if (!decoded.id || !decoded.email) {
+      logger.warn('Token com payload incompleto', { decoded });
+      res.status(401).json({ error: 'Token malformado', code: 'MALFORMED_TOKEN' });
+      return;
+    }
+    
     req.user = decoded;
-    logger.debug(`Token verificado para: ${decoded.email}`);
+    logger.debug('Token válido', { userId: decoded.id, email: decoded.email });
     next();
-  } catch (err) {
-    logger.warn('Erro ao verificar token', { error: (err as Error).message });
-    res.status(401).json({ error: 'Token inválido ou expirado' });
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      logger.warn('Token expirado', { expiredAt: error.expiredAt });
+      res.status(401).json({ error: 'Token expirado', code: 'TOKEN_EXPIRED' });
+      return;
+    }
+    
+    if (error instanceof jwt.JsonWebTokenError) {
+      logger.warn('Token inválido', { message: error.message });
+      res.status(401).json({ error: 'Token inválido', code: 'INVALID_TOKEN' });
+      return;
+    }
+    
+    logger.error('Erro ao verificar token', error as Error);
+    res.status(500).json({ error: 'Erro interno de autenticação', code: 'AUTH_ERROR' });
   }
 }
 
 /**
- * Verifica se usuário tem role de admin
- * @param req - Express Request object
- * @param res - Express Response object
- * @param next - Express NextFunction
+ * Middleware para verificar se usuário é admin
+ * Deve ser usado após verifyToken
  */
 export function verifyAdmin(req: Request, res: Response, next: NextFunction): void {
   if (!req.user) {
-    res.status(401).json({ error: 'Não autenticado' });
+    logger.warn('verifyAdmin chamado sem usuário autenticado');
+    res.status(401).json({ error: 'Não autenticado', code: 'NOT_AUTHENTICATED' });
     return;
   }
-
+  
   if (req.user.role !== 'admin') {
-    logger.logAccess(req.user.email, 'admin_resource', false, {
-      userRole: req.user.role,
+    logger.warn('Tentativa de acesso admin por não-admin', { 
+      userId: req.user.id, 
+      role: req.user.role 
     });
-    res.status(403).json({
-      error: 'Acesso negado',
-      required: 'admin',
-      userRole: req.user.role,
-    });
+    res.status(403).json({ error: 'Acesso negado. Privilégios de administrador necessários.', code: 'FORBIDDEN' });
     return;
   }
-
-  logger.logAccess(req.user.email, 'admin_resource', true);
+  
+  logger.debug('Acesso admin autorizado', { userId: req.user.id });
   next();
 }
 
 /**
- * Verifica role específico
- * @param allowedRoles - Array de roles permitidos
- * @returns Middleware function
+ * Middleware opcional - verifica token se presente, mas não bloqueia
  */
-export function verifyRole(allowedRoles: string[] = []): (req: Request, res: Response, next: NextFunction) => void {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      res.status(401).json({ error: 'Não autenticado' });
-      return;
-    }
-
-    if (!allowedRoles.includes(req.user.role)) {
-      logger.logAccess(req.user.email, `role_${allowedRoles.join('|')}`, false);
-      res.status(403).json({
-        error: 'Acesso negado',
-        required: allowedRoles,
-        userRole: req.user.role,
-      });
-      return;
-    }
-
+export function optionalAuth(req: Request, res: Response, next: NextFunction): void {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader?.startsWith('Bearer ')) {
     next();
+    return;
+  }
+  
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    req.user = jwt.verify(token, JWT_SECRET) as AuthPayload;
+  } catch {
+    // Ignora erro em auth opcional
+  }
+  
+  next();
+}
+
+/**
+ * Gera token JWT de acesso (24h)
+ */
+export const generateToken = (user: { id: number; email: string; name: string; role: string }): string => {
+  const payload = {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role
   };
-}
+  
+  return jwt.sign(payload, JWT_SECRET, { 
+    expiresIn: '24h',
+    issuer: 'labgrandisol',
+    audience: 'labgrandisol-users'
+  });
+};
 
 /**
- * Gera JWT access token
- * @param user - Objeto do usuário
- * @returns Token JWT
- * @throws Erro ao gerar token
+ * Gera token de refresh (7 dias)
  */
-export function generateToken(user: Partial<User>): string {
-  try {
-    const payload = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    };
-
-    const token: string = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY } as any);
-
-    return token;
-  } catch (err) {
-    logger.error('Erro ao gerar token', err as Error);
-    throw err;
-  }
-}
+export const generateRefreshToken = (user: { id: number; email: string }): string => {
+  const payload = {
+    id: user.id,
+    email: user.email,
+    type: 'refresh'
+  };
+  
+  return jwt.sign(payload, JWT_REFRESH_SECRET, { 
+    expiresIn: '7d',
+    issuer: 'labgrandisol',
+    audience: 'labgrandisol-refresh'
+  });
+};
 
 /**
- * Gera refresh token
- * @param user - Objeto do usuário
- * @returns Refresh token JWT
- * @throws Erro ao gerar refresh token
+ * Verifica refresh token
  */
-export function generateRefreshToken(user: Partial<User>): string {
+export const verifyRefreshToken = (token: string): { id: number; email: string } | null => {
   try {
-    const payload = {
-      id: user.id,
-      email: user.email,
-      type: 'refresh',
+    const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as any;
+    
+    if (decoded.type !== 'refresh') {
+      return null;
+    }
+    
+    return {
+      id: decoded.id,
+      email: decoded.email
     };
-
-    const token: string = jwt.sign(payload, JWT_SECRET + '_refresh', { expiresIn: REFRESH_TOKEN_EXPIRY } as any);
-
-    return token;
-  } catch (err) {
-    logger.error('Erro ao gerar refresh token', err as Error);
-    throw err;
+  } catch {
+    return null;
   }
-}
+};
 
-// Alias for compatibility
+// Alias para compatibilidade
 export const verifyAuth = verifyToken;

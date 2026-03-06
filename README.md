@@ -1,330 +1,139 @@
-# 🔐 LabGrandisol v2.0
+# 📖 LabGrandisol - Sistema de Biblioteca Virtual
 
-> Sistema Interno Privado - Enterprise Grade
+Um sistema completo de biblioteca virtual com design vintage clássico, construído com tecnologias modernas.
 
-## 🎉 Super Upgrade v2.0.0 (22/02/2026)
+![Version](https://img.shields.io/badge/version-2.1.0-burgundy)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Node](https://img.shields.io/badge/node-%3E%3D18-green)
 
-Projeto foi completamente **profissionalizado e harmonizado**:
+## ✨ Características
 
-### 📚 Documentação Completa ✅
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Design systems e diagrams
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Guia completo de deployment (AWS/K8s/VPS)
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guidelines para contribuição
-- **[SECURITY.md](SECURITY.md)** - Políticas e hardening
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Código de conduta
-- **[CHANGELOG.md](CHANGELOG.md)** - Histórico de versões
-- **[OpenAPI Spec](backend/openapi.json)** - Documentação interativa da API
+### 🎨 Design Vintage Clássico
+- Tema inspirado em bibliotecas clássicas e livrarias antigas
+- Paleta de cores em tons de sépia, burgundy e dourado
+- Tipografia elegante com fontes serifadas
+- Ornamentos e detalhes decorativos
 
-### 🔒 Segurança Avançada ✅
-- 🔐 Scans automáticos (secrets, vulnerabilities, containers)
-- 🔍 CodeQL analysis em cada push
-- 🛡️ Trivy container scanning
-- 🔎 TruffleHog secret detection
-- 📋 License compliance checking
-- 🚨 Automated security workflows
+### 📚 Funcionalidades Principais
+- **Acervo Digital**: Catálogo completo com busca avançada
+- **Almanaque Botânico**: Enciclopédia de plantas, famílias botânicas e expedições de campo
+- **Sistema de Empréstimos**: Gestão completa de empréstimos e devoluções
+- **Lista de Leitura**: Organize livros por status (quero ler, lendo, concluído)
+- **Comunidade**: Rede social para leitores
+- **Relatórios**: Análises e estatísticas de uso
 
-### 🚀 CI/CD Profissional ✅
-- ✅ **test.yml** - Lint, tests, coverage, security
-- ✅ **deploy.yml** - Build, push, deploy automation
-- ✅ **security.yml** - Dependency e container scanning
-- ✅ Codecov integration
-- ✅ GitHub Actions workflows
+### 🔧 Recursos Técnicos
+- **Frontend**: React 18 + Vite
+- **Backend**: Node.js + Express + TypeScript
+- **Banco de Dados**: PostgreSQL
+- **Cache**: Redis
+- **Autenticação**: JWT
 
-### 🐳 Docker Otimizado ✅
-- Multi-stage builds (mínimo, rápido)
-- Non-root user (segurança)
-- Health checks em cada serviço
-- Resource limits definidos
-- Network isolada com subnet
-- Alpine Linux base
-- Tini para signal handling
+## 🚀 Instalação Rápida
 
-### 🛠️ Infraestrutura Completa ✅
-- docker-compose com PostgreSQL, Redis, Caddy
-- Persistent volumes para dados
-- Health checks automáticos
-- Resource limits e reservations
-- Networking isolado (172.20.0.0/16)
-
-### 📝 Configuração Avançada ✅
-- .env.example com todas as variáveis
-- Multi-environment support
-- Feature flags integradas
-- Database selection (PostgreSQL/MySQL/SQLite)
-- Email configuration templates
-- AWS/Sentry integration ready
-
----
-
-## 🚀 Quick Start (30 segundos)
-
-### Pré-requisitos
-- Windows 10/11 com acesso administrador
-- Docker Desktop 4.0+ instalado
-- 2GB RAM disponível
-
-### Instalação
 ```powershell
-# 1. Configure hosts (como administrador)
-echo "127.0.0.1 wiki.local" | Add-Content "C:\Windows\System32\drivers\etc\hosts"
+# Clone o repositório
+git clone https://github.com/grandisol/labgrandisol.git
+cd labgrandisol
 
-# 2. Copie arquivo de configuração
-copy .env.example .env
-
-# 3. Inicie containers
-docker compose up -d --build
-
-# 4. Aguarde 30 segundos e acesse
-https://wiki.local
+# Execute o script de inicialização
+.\init.ps1
 ```
-
-**Credenciais padrão:**
-| Tipo | Email | Senha |
-|------|-------|-------|
-| Admin | `admin@wiki.local` | `admin123` |
-| User | `usuario@wiki.local` | `user123` |
-
----
-
-## 📋 Stack Tecnológico
-
-| Camada | Tecnologia | Propósito |
-|--------|-----------|----------|
-| **Frontend** | React 18 + Vite | Interface moderna e responsiva |
-| **Backend** | Node.js + Express + TypeScript | APIs RESTful com autenticação JWT |
-| **Database** | SQLite (em memória) | Dados estruturados e rápidos |
-| **Proxy** | Caddy 2 | HTTPS automático e reverse proxy |
-
----
-
-## ✨ Funcionalidades Principais
-
-✅ **Autenticação JWT** segura com refresh token  
-✅ **Painel Admin** completo com gerenciamento de usuários  
-✅ **20+ API endpoints** operacionais  
-✅ **HTTPS/TLS 1.3** automático  
-✅ **Interface responsiva** (desktop, tablet, mobile)  
-✅ **Senhas bcrypt** (10 rounds)  
-✅ **CORS configurado** corretamente  
-✅ **Logging estruturado** e persistente  
-✅ **Validação de inputs** com Express Validator  
-✅ **Rate limiting** implementado  
-
----
 
 ## 📁 Estrutura do Projeto
 
 ```
 labgrandisol/
-├── backend/
-│   ├── server.ts                # Entry point
-│   ├── middleware/              # Auth, validators, rate limit
-│   ├── routes/                  # API endpoints
-│   ├── utils/                   # Database, cache, logger
-│   ├── types/                   # TypeScript types
-│   ├── __tests__/              # Jest tests
-│   └── package.json
-│
-├── frontend/
+├── frontend/           # Aplicação React
 │   ├── src/
-│   │   ├── pages/              # React components
-│   │   ├── store/              # Zustand state management
-│   │   ├── api/                # API client
-│   │   ├── styles/             # CSS modules
-│   │   └── main.jsx
-│   └── vite.config.js
-│
-├── caddy/
-│   └── Caddyfile               # HTTPS config
-│
-├── scripts/
-│   ├── up.ps1                  # Iniciar
-│   ├── down.ps1                # Parar
-│   ├── reset.ps1               # Resetar dados
-│   └── start-dev.ps1            # Dev mode
-│
-├── docker-compose.yml           # Orquestração
-├── Dockerfile                   # Container build
-├── .env.example                 # Template config
-└── README.md
+│   │   ├── pages/      # Páginas da aplicação
+│   │   ├── styles/     # Estilos CSS por página
+│   │   ├── store/      # Estado global (Zustand)
+│   │   └── api/        # Cliente HTTP
+│   └── dist/           # Build de produção
+├── backend/            # API Node.js
+│   ├── routes/         # Endpoints da API
+│   ├── middleware/     # Middlewares Express
+│   ├── utils/          # Utilitários
+│   └── public/         # Arquivos estáticos
+├── caddy/              # Configuração do proxy
+└── scripts/            # Scripts de automação
 ```
 
----
+## 🎨 Sistema de Design
 
-## 🎮 Comandos de Desenvolvimento
+### Paleta de Cores
+| Nome | Código | Uso |
+|------|--------|-----|
+| Burgundy | `#722F37` | Cor principal |
+| Gold | `#B8860B` | Acentos |
+| Sepia | `#2C2416` | Fundos escuros |
+| Cream | `#F5F0E6` | Fundos claros |
+| Forest | `#2D4A3E` | Sucesso |
 
-### Iniciar Sistema
+### Tipografia
+- **Display**: Playfair Display (títulos)
+- **Body**: Lora (texto corrido)
+- **Sans**: Source Sans 3 (interface)
 
-```powershell
-# Com Docker (recomendado)
-docker compose up -d --build
+## 📱 Páginas Principais
 
-# Ou manualmente (dev mode)
-# Terminal 1:
-cd backend
-npm run dev
+| Rota | Descrição |
+|------|-----------|
+| `/` | Página inicial |
+| `/login` | Autenticação |
+| `/library` | Catálogo de livros |
+| `/books/:id` | Detalhes do livro |
+| `/my-loans` | Meus empréstimos |
+| `/reading-list` | Lista de leitura |
+| `/museum` | Almanaque Botânico |
+| `/social` | Comunidade |
+| `/reports` | Relatórios |
+| `/dashboard` | Painel do usuário |
+| `/admin` | Administração |
 
-# Terminal 2:
-cd frontend
-npm run dev
+## 🔐 Credenciais de Demo
+
+```
+Email: admin@labgrandisol.com
+Senha: admin123
 ```
 
-### Parar Sistema
+## 🛠️ Scripts Disponíveis
 
 ```powershell
-# Parar containers
-docker compose down
-
-# Ou PowerShell script
-powershell .\scripts\down.ps1
-```
-
-### Desenvolvimento
-
-```powershell
-# Backend - Em tempo real
-cd backend
+# Desenvolvimento
 npm run dev
 
-# Frontend - Em tempo real
-cd frontend
-npm run dev
+# Build de produção
+npm run build
 
-# TypeScript check
-cd backend
-npm run typecheck
-
-# Tests
-npm test
-
-# Lint & Format
+# Linting
 npm run lint
-npm run lint:fix
-npm run format
+
+# Testes
+npm test
 ```
 
-### Monitoramento
+## 📖 Documentação
 
-```powershell
-# Ver status dos containers
-docker compose ps
+- [Arquitetura](./ARCHITECTURE.md)
+- [Deploy](./DEPLOYMENT.md)
+- [Contribuição](./CONTRIBUTING.md)
+- [Changelog](./CHANGELOG.md)
 
-# Ver logs em tempo real
-docker compose logs -f app          # Backend
-docker compose logs -f frontend     # Frontend
+## 🤝 Contribuindo
 
-# Ver logs específicos
-docker compose logs app --tail 50
-```
+1. Fork o projeto
+2. Crie sua branch (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
 
-### Reset & Limpeza
+## 📄 Licença
 
-```powershell
-# Remover todos dados
-.\scripts\reset.ps1
-
-# Down sem volume
-docker compose down -v
-
-# Limpar containers dangling
-docker system prune
-```
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
 
-## 🔐 Segurança
-
-| Aspecto | Implementação |
-|--------|---------------|
-| **Autenticação** | JWT com expiry 7 dias |
-| **Senhas** | bcryptjs (10 rounds) |
-| **HTTPS** | TLS 1.3 automático via Caddy |
-| **Headers** | Helmet.js middleware |
-| **CORS** | Restrito a origin configurado |
-| **Rate Limiting** | 100 req/15min por IP |
-| **Validação** | Express-validator em todos inputs |
-| **Rede** | Docker network isolada |
-| **Variáveis** | .env com secrets |
-
----
-
-## 📡 API Reference
-
-### Authentication
-```
-POST   /api/auth/login        Login (email + password)
-POST   /api/auth/register     Register (email + password)
-POST   /api/auth/refresh      Refresh JWT token
-POST   /api/auth/logout       Logout
-```
-
-### Profile
-```
-GET    /api/profile           Get current user
-PUT    /api/profile           Update profile
-GET    /api/profile/settings  User settings
-```
-
-### Admin (requer token + admin role)
-```
-GET    /api/admin/dashboard   System stats
-GET    /api/admin/users       List users
-PUT    /api/admin/users/:id   Update user
-DELETE /api/admin/users/:id   Delete user
-GET    /api/admin/settings    App settings
-POST   /api/admin/backup      Create backup
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Erro: "Porto 3001 em uso"
-```powershell
-netstat -ano | findstr :3001
-taskkill /PID <PID> /F
-```
-
-### Erro: "Certificado SSL inválido"
-Normal em desenvolvimento. Clique "Prosseguir" no navegador (ignore aviso).
-
-### Erro: "Docker não encontrado"
-Instale Docker Desktop: https://www.docker.com/products/docker-desktop
-
-### Erro: "Cannot GET /"
-Verifique se o frontend está rodando na porta 5173 e acesse:
-```
-http://localhost:5173
-```
-
-### Reset completo do ambiente
-```powershell
-docker compose down -v
-Remove-Item -Recurse -Force backend\node_modules
-Remove-Item -Recurse -Force frontend\node_modules
-docker compose up -d --build
-```
-
----
-
-## 📊 Endpoints de Status
-
-```
-GET    /health                Health check
-GET    /metrics               Prometheus metrics (em breve)
-GET    /api/version           Versão do sistema
-```
-
----
-
-## 🚀 Deployment
-
-Pronto para:
-- ✅ Produção (com .env configurado)
-- ✅ CI/CD (GitHub Actions)
-- ✅ Kubernetes (Helm chart)
-- ✅ Cloud (AWS, Azure, GCP)
-
----
-
-**LabGrandisol v2.0** — Desenvolvido com ❤️ em 2026
+Desenvolvido com ❤️ pela equipe LabGrandisol

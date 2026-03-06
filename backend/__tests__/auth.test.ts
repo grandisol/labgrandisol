@@ -2,7 +2,7 @@
  * Testes para Authentication
  */
 
-import { generateToken, generateRefreshToken } from '../../middleware/auth.js';
+import { generateToken, generateRefreshToken } from '../middleware/auth.js';
 import bcrypt from 'bcryptjs';
 
 describe('Authentication Module', () => {

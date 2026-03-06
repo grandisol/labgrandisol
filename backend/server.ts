@@ -1,10 +1,11 @@
-import express, { Express, Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createServer } from 'http';
 
 // Rotas
 import authMockRoutes from './routes/auth-mock.js';
@@ -12,264 +13,179 @@ import apiRoutes from './routes/api.js';
 import adminRoutes from './routes/admin.js';
 import libraryMockRoutes from './routes/library-mock.js';
 import advancedLibraryRoutes from './routes/advanced-library.js';
-import saasRoutes from './routes/saas.js';
 import notificationsRoutes from './routes/notifications.js';
 import searchRoutes from './routes/search.js';
 import socialRoutes from './routes/social.js';
 import reportsRoutes from './routes/reports.js';
+import museumRoutes from './routes/museum.js';
+import readingRoutes from './routes/reading.js';
 
 // Middleware
 import { verifyToken, verifyAdmin } from './middleware/auth.js';
-import rateLimit from './middleware/rateLimiter.js';
+import { rateLimit, authRateLimit, multiLevelRateLimit } from './middleware/advancedRateLimiter.js';
+import { requestIdMiddleware } from './middleware/requestId.js';
+import { errorHandler, notFoundHandler, setupUncaughtExceptionHandlers } from './middleware/errorHandler.js';
+import { metricsMiddleware } from './utils/metrics.js';
+import { alertManager } from './utils/alerts.js';
 
 // Utils
 import Logger from './utils/logger.js';
 import { initializeDatabase, healthCheck } from './utils/database.js';
+import wsManager from './utils/websocket.js';
+import notificationService from './utils/notificationService.js';
 
 dotenv.config();
 
-const __filename: string = fileURLToPath(import.meta.url);
-const __dirname: string = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app: Express = express();
-const PORT: string | number = process.env.PORT || 3001;
-const NODE_ENV: string = process.env.NODE_ENV || 'production';
-
+const PORT = process.env.PORT || 3001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 const logger = new Logger('Server');
 
-// ==================== VALIDAÇÃO DE AMBIENTE ====================
+// ==================== PATHS ====================
+const publicPath = path.join(__dirname, './public');
 
-if (NODE_ENV === 'production') {
-  const requiredEnvVars: string[] = ['POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_DB', 'JWT_SECRET'];
-  const missing: string[] = requiredEnvVars.filter((v) => !process.env[v]);
-
-  if (missing.length > 0) {
-    logger.critical(`Variáveis de ambiente obrigatórias faltando: ${missing.join(', ')}`);
-    process.exit(1);
-  }
-}
+// ==================== SETUP ERROR HANDLERS ====================
+setupUncaughtExceptionHandlers();
 
 // ==================== MIDDLEWARE GLOBAL ====================
-
-// Segurança
-app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://wiki.local'],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
-
-// Logging HTTP
-app.use((req: Request, res: Response, next: NextFunction): void => {
-  const start: number = Date.now();
-
-  res.on('finish', (): void => {
-    const duration: number = Date.now() - start;
-    logger.logRequest(req.method, req.path, res.statusCode, duration);
-  });
-
-  next();
-});
-
-// Compressão
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({ origin: true, credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], allowedHeaders: ['Content-Type', 'Authorization'] }));
 app.use(compression());
-
-// Body parser com limite
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// ==================== SERVIR FRONTEND ====================
+// Request ID para rastreamento
+app.use(requestIdMiddleware);
 
-const publicPath: string = path.join(__dirname, './public');
+// Middleware de coleta de métricas
+app.use(metricsMiddleware);
+
+// Logging
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  res.on('finish', () => logger.logRequest(req.method, req.path, res.statusCode, Date.now() - start));
+  next();
+});
+
+// ==================== ARQUIVOS ESTÁTICOS (SEM AUTH) ====================
 app.use(express.static(publicPath));
 
-// SPA fallback para raiz
-app.get('/', (_req: Request, res: Response): void => {
-  res.sendFile(path.join(publicPath, 'index.html'));
-});
+// ==================== ROTAS PÚBLICAS (SEM AUTH) ====================
 
-// ==================== ROTAS PÚBLICAS ====================
-
-/**
- * GET /api/health
- * Health check para monitoring
- */
-app.get('/api/health', async (_req: Request, res: Response): Promise<void> => {
+// Health check
+app.get('/api/health', async (_req: Request, res: Response) => {
   try {
-    const dbHealth = await healthCheck();
-
-    res.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: NODE_ENV,
-      database: dbHealth,
-    });
-  } catch (err) {
-    logger.error('Health check failed', err as Error);
-    res.status(503).json({
-      status: 'unhealthy',
-      error: 'Database connection failed',
-    });
-  }
+    res.json({ status: 'healthy', timestamp: new Date().toISOString(), uptime: process.uptime(), database: await healthCheck() });
+  } catch { res.status(503).json({ status: 'unhealthy' }); }
 });
 
-// Rate limiting global (100 requisições por 60 segundos)
-const globalLimiter = rateLimit({ max: 100, windowMs: 60000, endpoint: 'global' });
-app.use('/api/', globalLimiter);
-
-// Rotas de autenticação
-logger.info('Registrando rotas de autenticação (Mock)');
+// Auth routes
 app.use('/api/auth', authMockRoutes);
 
-// ==================== MIDDLEWARE DE AUTENTICAÇÃO ====================
-
-app.use(verifyToken);
+// Rate limiting global
+app.use('/api/', multiLevelRateLimit);
 
 // ==================== ROTAS PROTEGIDAS ====================
 
-// API geral (protegida)
-logger.info('Registrando rotas de API protegidas');
-app.use('/api', apiRoutes);
+// API geral
+app.use('/api', verifyToken, apiRoutes);
 
-// Biblioteca (usando Mock Database para desenvolvimento)
-logger.info('Registrando rotas de biblioteca (Mock Database)');
+// Biblioteca (rotas públicas para leitura)
 app.use('/api/library', libraryMockRoutes);
 
-// Rotas avançadas (recursos premium)
-logger.info('Registrando rotas de biblioteca avançada');
-app.use('/api/advanced', advancedLibraryRoutes);
-
-// SaaS (workspace, assinatura, etc)
-logger.info('Registrando rotas SaaS');
-app.use('/api/saas', saasRoutes);
+// Advanced Library (requer autenticação)
+app.use('/api/advanced', verifyToken, advancedLibraryRoutes);
 
 // Notificações
-logger.info('Registrando rotas de notificações');
-app.use('/api/notifications', notificationsRoutes);
+app.use('/api/notifications', verifyToken, notificationsRoutes);
 
-// Busca avançada
-logger.info('Registrando rotas de busca avançada');
-app.use('/api/search', searchRoutes);
+// Busca
+app.use('/api/search', verifyToken, searchRoutes);
 
-// Social features
-logger.info('Registrando rotas de social');
-app.use('/api/social', socialRoutes);
+// Social
+app.use('/api/social', verifyToken, socialRoutes);
 
 // Relatórios
-logger.info('Registrando rotas de relatórios');
-app.use('/api/reports', reportsRoutes);
+app.use('/api/reports', verifyToken, reportsRoutes);
 
-// Admin (requer admin)
-logger.info('Registrando rotas de admin');
-app.use('/api/admin', verifyAdmin, adminRoutes);
+// Almanaque Botânico (público para leitura)
+app.use('/api/museum', museumRoutes);
 
-// ==================== FALLBACK PARA SPA ====================
+// Leitura
+app.use('/api/reading', verifyToken, readingRoutes);
 
-app.get('*', (_req: Request, res: Response): void => {
+// Admin
+app.use('/api/admin', verifyToken, verifyAdmin, adminRoutes);
+
+// ==================== SPA FALLBACK ====================
+app.get('*', (_req: Request, res: Response) => {
   res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// ==================== TRATAMENTO DE ERROS ====================
-
-/**
- * 404 Handler
- */
-app.use((req: Request, res: Response): void => {
-  logger.warn('Rota não encontrada', {
-    method: req.method,
-    path: req.path,
-    ip: req.ip,
-  });
-
-  res.status(404).json({
-    error: 'Rota não encontrada',
-    path: req.path,
-  });
-});
-
-/**
- * Error Handler Global
- */
-const errorHandler: ErrorRequestHandler = (err, req, res, _next): void => {
-  logger.error('Erro não tratado', err as Error, {
-    method: req.method,
-    path: req.path,
-    ip: req.ip,
-  });
-
-  const status: number = (err as any).status || 500;
-  const message: string =
-    NODE_ENV === 'production' ? 'Erro interno do servidor' : (err as Error).message;
-
-  res.status(status).json({
-    error: message,
-    ...(NODE_ENV === 'development' && { stack: (err as Error).stack }),
-  });
-};
-
+// ==================== ERROR HANDLER ====================
+app.use(notFoundHandler);
 app.use(errorHandler);
 
-// ==================== INICIALIZAR SERVIDOR ====================
-
-/**
- * Função para iniciar o servidor
- */
-async function start(): Promise<void> {
+// ==================== INICIALIZAÇÃO ====================
+async function start() {
   try {
-    // Conecta ao banco de dados (opcional para desenvolvimento)
-    logger.info('Inicializando conexão com banco de dados...');
+    // Inicializar banco de dados
     try {
       await initializeDatabase();
-      logger.info('✅ PostgreSQL conectado com sucesso');
-    } catch (dbError) {
-      logger.warn('⚠️ PostgreSQL não disponível. Usando Mock Database para desenvolvimento...', {
-        error: (dbError as Error).message
-      });
-      // Mock Database será usado via fallback nas rotas
-    }
+      logger.info('✅ PostgreSQL conectado');
+    } catch { logger.warn('⚠️ Usando Mock Database'); }
 
-    // Inicia servidor HTTP
-    const server = app.listen(PORT, (): void => {
-      logger.info('╔════════════════════════════════════════════════════════╗');
-      logger.info('║       LabGrandisol - Sistema Interno Privado          ║');
-      logger.info('╚════════════════════════════════════════════════════════╝');
-      logger.info(`Servidor iniciado com sucesso`, {
-        port: PORT,
-        environment: NODE_ENV,
-        timestamp: new Date().toLocaleString('pt-BR'),
-      });
-      logger.info(`🔗 https://wiki.local`);
-      logger.info(`📡 https://wiki.local/api`);
-      logger.info(`🛠️  https://wiki.local/admin`);
-    });
+    // Criar servidor HTTP
+    const server = createServer(app);
+
+    // Inicializar WebSocket
+    wsManager.initialize(server);
+    logger.info('✅ WebSocket inicializado');
+
+    // Iniciar monitoramento de alertas
+    alertManager.startMonitoring(30000); // Verifica alertas a cada 30 segundos
+    logger.info('✅ Monitoramento de alertas iniciado');
 
     // Graceful shutdown
-    process.on('SIGINT', (): void => {
-      logger.info('Recebido SIGINT, encerrando gracefully...');
-      server.close((): void => {
-        logger.info('Servidor encerrado');
+    const gracefulShutdown = () => {
+      logger.info('🔄 Iniciando graceful shutdown...');
+      
+      wsManager.close();
+      notificationService.stop();
+      
+      server.close(() => {
+        logger.info('✅ Servidor encerrado');
         process.exit(0);
       });
+
+      // Force close após 10 segundos
+      setTimeout(() => {
+        logger.error('⚠️ Forçando encerramento');
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on('SIGTERM', gracefulShutdown);
+    process.on('SIGINT', gracefulShutdown);
+
+    // Iniciar servidor
+    server.listen(PORT, () => {
+      logger.info('╔════════════════════════════════════════════════════════╗');
+      logger.info('║       LabGrandisol - Almanaque Botânico               ║');
+      logger.info('╚════════════════════════════════════════════════════════╝');
+      logger.info(`Servidor: http://localhost:${PORT}`);
+      logger.info(`WebSocket: ws://localhost:${PORT}/ws`);
+      logger.info(`Ambiente: ${NODE_ENV}`);
     });
 
-    process.on('SIGTERM', (): void => {
-      logger.info('Recebido SIGTERM, encerrando gracefully...');
-      server.close((): void => {
-        logger.info('Servidor encerrado');
-        process.exit(0);
-      });
-    });
   } catch (error) {
-    logger.critical('Falha ao iniciar servidor', error as Error);
+    logger.critical('Falha ao iniciar', error as Error);
     process.exit(1);
   }
 }
 
-// Inicia aplicação
 void start();
-
 export default app;

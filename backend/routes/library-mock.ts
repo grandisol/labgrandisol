@@ -11,8 +11,7 @@ import { mockDB } from '../utils/mockDatabase.js';
 const router = Router();
 const logger = new Logger('LibraryRoutes');
 
-// Aplicar autenticação em todas as rotas
-router.use(verifyToken);
+// Auth já é aplicada no server.ts
 
 /**
  * GET /api/library/books
@@ -21,12 +20,12 @@ router.use(verifyToken);
 router.get('/books', (req: Request, res: Response): void => {
   try {
     const { q, limit = 20, offset = 0 } = req.query;
-    const limitNum = parseInt(limit as string) || 20;
-    const offsetNum = parseInt(offset as string) || 0;
+    const limitNum = parseInt(String(limit)) || 20;
+    const offsetNum = parseInt(String(offset)) || 0;
 
     let result;
     if (q) {
-      result = mockDB.searchBooks(q as string, limitNum, offsetNum);
+      result = mockDB.searchBooks(String(q), limitNum, offsetNum);
     } else {
       result = mockDB.getAllBooks(limitNum, offsetNum);
     }
@@ -52,7 +51,7 @@ router.get('/books', (req: Request, res: Response): void => {
  */
 router.get('/books/:id', (req: Request, res: Response): void => {
   try {
-    const bookId = parseInt(req.params.id);
+    const bookId = parseInt(String(req.params.id));
     const book = mockDB.getBookById(bookId);
 
     if (!book) {
@@ -276,7 +275,7 @@ router.delete('/reading-list/:id', (req: Request, res: Response): void => {
       return;
     }
 
-    const itemId = parseInt(req.params.id);
+    const itemId = parseInt(String(req.params.id));
     const item = mockDB.readingLists.find(rl => rl.id === itemId);
 
     if (!item) {
@@ -296,6 +295,108 @@ router.delete('/reading-list/:id', (req: Request, res: Response): void => {
   } catch (error) {
     logger.error('Erro ao remover item', error as Error);
     res.status(500).json({ error: 'Erro ao remover item' });
+  }
+});
+
+/**
+ * POST /api/library/loans/:id/renew
+ * Renovar empréstimo
+ */
+router.post('/loans/:id/renew', (req: Request, res: Response): void => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const loanId = parseInt(String(req.params.id));
+    const loan = mockDB.loans.find(l => l.id === loanId);
+
+    if (!loan) {
+      res.status(404).json({ error: 'Empréstimo não encontrado' });
+      return;
+    }
+
+    if (loan.user_id !== req.user.id) {
+      res.status(403).json({ error: 'Sem permissão' });
+      return;
+    }
+
+    if (loan.status !== 'active') {
+      res.status(400).json({ error: 'Este empréstimo não está ativo' });
+      return;
+    }
+
+    // Check max renewals (3)
+    if (loan.renewal_count >= 3) {
+      res.status(400).json({ error: 'Limite de renovações atingido (máximo 3)' });
+      return;
+    }
+
+    // Extend due date by 14 days
+    const currentDueDate = new Date(loan.due_date);
+    currentDueDate.setDate(currentDueDate.getDate() + 14);
+    loan.due_date = currentDueDate;
+    loan.renewal_count = (loan.renewal_count || 0) + 1;
+
+    logger.info('Empréstimo renovado', { userId: req.user.id, loanId, renewalCount: loan.renewal_count });
+    res.json({
+      message: 'Empréstimo renovado com sucesso',
+      loan,
+    });
+  } catch (error) {
+    logger.error('Erro ao renovar empréstimo', error as Error);
+    res.status(500).json({ error: 'Erro ao renovar empréstimo' });
+  }
+});
+
+/**
+ * POST /api/library/loans/:id/return
+ * Devolver livro emprestado
+ */
+router.post('/loans/:id/return', (req: Request, res: Response): void => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    const loanId = parseInt(String(req.params.id));
+    const loan = mockDB.loans.find(l => l.id === loanId);
+
+    if (!loan) {
+      res.status(404).json({ error: 'Empréstimo não encontrado' });
+      return;
+    }
+
+    if (loan.user_id !== req.user.id) {
+      res.status(403).json({ error: 'Sem permissão' });
+      return;
+    }
+
+    if (loan.status !== 'active') {
+      res.status(400).json({ error: 'Este empréstimo já foi devolvido' });
+      return;
+    }
+
+    // Update loan status
+    loan.status = 'returned';
+    loan.return_date = new Date();
+
+    // Increment available copies
+    const book = mockDB.books.find(b => b.id === loan.book_id);
+    if (book) {
+      book.available_copies++;
+    }
+
+    logger.info('Livro devolvido', { userId: req.user.id, loanId, bookId: loan.book_id });
+    res.json({
+      message: 'Livro devolvido com sucesso',
+      loan,
+    });
+  } catch (error) {
+    logger.error('Erro ao devolver livro', error as Error);
+    res.status(500).json({ error: 'Erro ao devolver livro' });
   }
 });
 

@@ -1,6 +1,15 @@
+/**
+ * Reports Routes - LabGrandisol
+ * Relatórios e análises do usuário
+ */
+
 import { Router, Request, Response } from 'express';
 import { verifyToken } from '../middleware/auth.js';
 import Logger from '../utils/logger.js';
+
+// Importações para análise de código multi-linguagem
+import { analyzeCodeComplexity, analyzeMultipleFiles, generateCodeAnalysisReport } from '../utils/codeAnalyzer.js';
+import { calculatePerformanceMetrics, calculateQualityMetrics, calculateSecurityMetrics, calculateDevelopmentMetrics, generateMetricsReport } from '../utils/codeMetrics.js';
 
 const logger = new Logger('Reports');
 
@@ -10,8 +19,14 @@ const router = Router();
  * GET /api/reports/reading
  * Relatório de leitura detalhado
  */
-router.get('/reading', verifyToken, (req: Request, res: Response) => {
+router.get('/reading', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const { start_date, end_date } = req.query;
 
     const now = new Date();
@@ -85,13 +100,13 @@ router.get('/reading', verifyToken, (req: Request, res: Response) => {
     };
 
     logger.info(
-      `Relatório de leitura gerado para o período ${reportData.period.start} até ${reportData.period.end}`
+      `Relatório de leitura gerado para usuário ${userId} - período ${reportData.period.start} até ${reportData.period.end}`
     );
 
-    return res.status(200).json(reportData);
+    res.status(200).json(reportData);
   } catch (error) {
     logger.error('Erro ao gerar relatório de leitura');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -99,8 +114,14 @@ router.get('/reading', verifyToken, (req: Request, res: Response) => {
  * GET /api/reports/collections
  * Relatório de coleções
  */
-router.get('/collections', verifyToken, (_req: Request, res: Response) => {
+router.get('/collections', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const reportData = {
       total_collections: 4,
       total_books_in_collections: 15,
@@ -144,12 +165,12 @@ router.get('/collections', verifyToken, (_req: Request, res: Response) => {
       ],
     };
 
-    logger.info('Relatório de coleções gerado');
+    logger.info(`Relatório de coleções gerado para usuário ${userId}`);
 
-    return res.status(200).json(reportData);
+    res.status(200).json(reportData);
   } catch (error) {
     logger.error('Erro ao gerar relatório de coleções');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -157,8 +178,14 @@ router.get('/collections', verifyToken, (_req: Request, res: Response) => {
  * GET /api/reports/reviews
  * Relatório de reviews
  */
-router.get('/reviews', verifyToken, (_req: Request, res: Response) => {
+router.get('/reviews', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const reportData = {
       total_reviews: 24,
       average_rating_given: 4.3,
@@ -193,12 +220,12 @@ router.get('/reviews', verifyToken, (_req: Request, res: Response) => {
       ],
     };
 
-    logger.info('Relatório de reviews gerado');
+    logger.info(`Relatório de reviews gerado para usuário ${userId}`);
 
-    return res.status(200).json(reportData);
+    res.status(200).json(reportData);
   } catch (error) {
     logger.error('Erro ao gerar relatório de reviews');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -206,8 +233,14 @@ router.get('/reviews', verifyToken, (_req: Request, res: Response) => {
  * GET /api/reports/achievements
  * Relatório de conquistas e progresso
  */
-router.get('/achievements', verifyToken, (_req: Request, res: Response) => {
+router.get('/achievements', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const reportData = {
       total_achievements: 3,
       achievement_categories: {
@@ -261,12 +294,12 @@ router.get('/achievements', verifyToken, (_req: Request, res: Response) => {
       },
     };
 
-    logger.info('Relatório de conquistas gerado');
+    logger.info(`Relatório de conquistas gerado para usuário ${userId}`);
 
-    return res.status(200).json(reportData);
+    res.status(200).json(reportData);
   } catch (error) {
     logger.error('Erro ao gerar relatório de conquistas');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -274,8 +307,14 @@ router.get('/achievements', verifyToken, (_req: Request, res: Response) => {
  * GET /api/reports/social
  * Relatório de atividade social
  */
-router.get('/social', verifyToken, (_req: Request, res: Response) => {
+router.get('/social', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const reportData = {
       followers_count: 15,
       following_count: 8,
@@ -309,12 +348,196 @@ router.get('/social', verifyToken, (_req: Request, res: Response) => {
       },
     };
 
-    logger.info('Relatório social gerado');
+    logger.info(`Relatório social gerado para usuário ${userId}`);
 
-    return res.status(200).json(reportData);
+    res.status(200).json(reportData);
   } catch (error) {
     logger.error('Erro ao gerar relatório social');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+/**
+ * GET /api/reports/code
+ * Relatório de análise de código multi-linguagem
+ */
+router.get('/code', verifyToken, (req: Request, res: Response): void => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
+    // Mock code analysis data
+    const mockFiles = [
+      {
+        content: `
+          function calculateTotal(items) {
+            let total = 0;
+            for (let i = 0; i < items.length; i++) {
+              total += items[i].price;
+            }
+            return total;
+          }
+          
+          class ShoppingCart {
+            constructor() {
+              this.items = [];
+            }
+            
+            addItem(item) {
+              this.items.push(item);
+            }
+          }
+        `,
+        language: 'javascript',
+        filename: 'shopping-cart.js'
+      },
+      {
+        content: `
+          def calculate_total(items):
+              total = 0
+              for item in items:
+                  total += item['price']
+              return total
+          
+          class ShoppingCart:
+              def __init__(self):
+                  self.items = []
+              
+              def add_item(self, item):
+                  self.items.append(item)
+        `,
+        language: 'python',
+        filename: 'shopping_cart.py'
+      },
+      {
+        content: `
+          public class ShoppingCart {
+              private List<Item> items;
+              
+              public ShoppingCart() {
+                  this.items = new ArrayList<>();
+              }
+              
+              public double calculateTotal() {
+                  double total = 0;
+                  for (Item item : items) {
+                      total += item.getPrice();
+                  }
+                  return total;
+              }
+              
+              public void addItem(Item item) {
+                  items.add(item);
+              }
+          }
+        `,
+        language: 'java',
+        filename: 'ShoppingCart.java'
+      },
+      {
+        content: `
+          <div class="container">
+            <h1>Meu Carrinho</h1>
+            <div id="items-list">
+              <!-- Items will be rendered here -->
+            </div>
+            <div class="total">
+              <span>Total: R$ <span id="total-amount">0,00</span></span>
+            </div>
+          </div>
+        `,
+        language: 'html',
+        filename: 'cart.html'
+      },
+      {
+        content: `
+          .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+          }
+          
+          .total {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: right;
+            font-size: 1.2em;
+            font-weight: bold;
+          }
+        `,
+        language: 'css',
+        filename: 'styles.css'
+      }
+    ];
+
+    // Analyze code complexity
+    const codeMetrics = analyzeMultipleFiles(mockFiles);
+    const analysisReport = generateCodeAnalysisReport(codeMetrics);
+
+    // Generate detailed metrics
+    const detailedMetrics = mockFiles.map(file => {
+      const codeMetrics = analyzeCodeComplexity(file.content, file.language);
+      
+      // Mock performance metrics
+      const performanceMetrics = calculatePerformanceMetrics(codeMetrics, Math.random() * 100);
+      
+      // Mock quality metrics
+      const qualityMetrics = calculateQualityMetrics(codeMetrics, {
+        passed: Math.floor(Math.random() * 10) + 5,
+        failed: Math.floor(Math.random() * 3),
+        total: 10
+      });
+      
+      // Mock security metrics
+      const securityMetrics = calculateSecurityMetrics(codeMetrics, {
+        vulnerabilities: Math.floor(Math.random() * 5),
+        critical: Math.floor(Math.random() * 2),
+        high: Math.floor(Math.random() * 3),
+        medium: Math.floor(Math.random() * 5),
+        low: Math.floor(Math.random() * 10)
+      });
+      
+      // Mock development metrics
+      const developmentMetrics = calculateDevelopmentMetrics(
+        { start: new Date('2026-01-01'), end: new Date() },
+        {
+          commits: Math.floor(Math.random() * 50) + 10,
+          linesAdded: Math.floor(Math.random() * 1000) + 100,
+          linesRemoved: Math.floor(Math.random() * 200) + 10,
+          featuresCompleted: Math.floor(Math.random() * 5) + 1,
+          bugsFixed: Math.floor(Math.random() * 10) + 1
+        }
+      );
+
+      return generateMetricsReport(
+        codeMetrics,
+        performanceMetrics,
+        qualityMetrics,
+        securityMetrics,
+        developmentMetrics
+      );
+    });
+
+    const reportData = {
+      summary: analysisReport.summary,
+      language_breakdown: analysisReport.languageBreakdown,
+      files: detailedMetrics,
+      recommendations: analysisReport.recommendations,
+      generated_at: new Date().toISOString()
+    };
+
+    logger.info(`Relatório de análise de código gerado para usuário ${userId}`);
+
+    res.status(200).json(reportData);
+  } catch (error) {
+    logger.error('Erro ao gerar relatório de análise de código');
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -322,18 +545,23 @@ router.get('/social', verifyToken, (_req: Request, res: Response) => {
  * GET /api/reports/export/:format
  * Exportar relatório em múltiplos formatos
  */
-router.get('/export/:format', verifyToken, (req: Request, res: Response) => {
+router.get('/export/:format', verifyToken, (req: Request, res: Response): void => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const { format } = req.params;
     const { report_type = 'reading' } = req.query;
 
     if (!['pdf', 'csv', 'json'].includes(String(format))) {
-      return res.status(400).json({ error: 'Formato inválido. Use: pdf, csv, json' });
+      res.status(400).json({ error: 'Formato inválido. Use: pdf, csv, json' });
+      return;
     }
 
-    logger.info(
-      `Relatório de ${report_type} exportado em formato ${format}`
-    );
+    logger.info(`Relatório de ${report_type} exportado em formato ${format} para usuário ${userId}`);
 
     // Mock export
     const mockData = {
@@ -343,7 +571,7 @@ router.get('/export/:format', verifyToken, (req: Request, res: Response) => {
       file_size: '250KB',
     };
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: `Relatório exportado em ${String(format).toUpperCase()}`,
       download_url: `/api/reports/download/${report_type}_${Date.now()}.${format}`,
@@ -351,7 +579,7 @@ router.get('/export/:format', verifyToken, (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao exportar relatório');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 

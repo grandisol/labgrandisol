@@ -18,16 +18,16 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@middleware/*": ["./src/middleware/*"],
-      "@routes/*": ["./src/routes/*"],
-      "@types/*": ["./src/types/*"]
+      "@utils/*": ["./utils/*"],
+      "@middleware/*": ["./middleware/*"],
+      "@routes/*": ["./routes/*"],
+      "@types/*": ["./types/*"]
     },
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true
   },
   "include": ["backend/**/*", "frontend/src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist"]
 }

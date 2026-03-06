@@ -1,3 +1,8 @@
+/**
+ * Social Routes - LabGrandisol
+ * Funcionalidades sociais: seguidores, feed, atividades
+ */
+
 import { Router, Request, Response } from 'express';
 import { verifyToken } from '../middleware/auth.js';
 import Logger from '../utils/logger.js';
@@ -5,6 +10,27 @@ import Logger from '../utils/logger.js';
 const logger = new Logger('Social');
 
 const router = Router();
+
+// Tipos
+interface SocialUser {
+  id: number;
+  name: string;
+  email: string;
+  avatar_url: string;
+  followed_at: string;
+}
+
+interface Activity {
+  id: number;
+  type: string;
+  user_id: number;
+  user_name: string;
+  action: string;
+  target: string;
+  rating?: number;
+  created_at: string;
+  icon: string;
+}
 
 // Mock social data
 const socialDB = {
@@ -15,7 +41,7 @@ const socialDB = {
     2: [
       { id: 1, name: 'Admin', email: 'admin@library.local', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin', followed_at: '2026-01-10T00:00:00Z' },
     ],
-  },
+  } as Record<number, SocialUser[]>,
   following: {
     1: [
       { id: 2, name: 'João Silva', email: 'usuario@library.local', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user1', followed_at: '2026-01-10T00:00:00Z' },
@@ -23,7 +49,7 @@ const socialDB = {
     2: [
       { id: 1, name: 'Admin', email: 'admin@library.local', avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin', followed_at: '2026-01-15T00:00:00Z' },
     ],
-  },
+  } as Record<number, SocialUser[]>,
   activity: {
     1: [
       {
@@ -70,26 +96,29 @@ const socialDB = {
         icon: '✅',
       },
     ],
-  },
+  } as Record<number, Activity[]>,
 };
 
 /**
  * GET /api/social/followers
  * Listar seguidores
  */
-router.get('/followers', verifyToken, (req: Request, res: Response) => {
+router.get('/followers', verifyToken, (req: Request, res: Response): void => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const { limit = 20, offset = 0 } = req.query;
 
-    const followers = (socialDB.followers as any)[userId] || [];
+    const followers = socialDB.followers[userId] || [];
     const paginated = followers.slice(Number(offset), Number(offset) + Number(limit));
 
-    logger.info(
-      `Seguidores recuperados para usuário ${userId}`
-    );
+    logger.info(`Seguidores recuperados para usuário ${userId}`);
 
-    return res.status(200).json({
+    res.status(200).json({
       followers: paginated,
       total: followers.length,
       page: Math.floor(Number(offset) / Number(limit)) + 1,
@@ -97,7 +126,7 @@ router.get('/followers', verifyToken, (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao recuperar seguidores');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -105,19 +134,22 @@ router.get('/followers', verifyToken, (req: Request, res: Response) => {
  * GET /api/social/following
  * Listar quem está seguindo
  */
-router.get('/following', verifyToken, (req: Request, res: Response) => {
+router.get('/following', verifyToken, (req: Request, res: Response): void => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const { limit = 20, offset = 0 } = req.query;
 
-    const following = (socialDB.following as any)[userId] || [];
+    const following = socialDB.following[userId] || [];
     const paginated = following.slice(Number(offset), Number(offset) + Number(limit));
 
-    logger.info(
-      `Seguidos recuperados para usuário ${userId}`
-    );
+    logger.info(`Seguidos recuperados para usuário ${userId}`);
 
-    return res.status(200).json({
+    res.status(200).json({
       following: paginated,
       total: following.length,
       page: Math.floor(Number(offset) / Number(limit)) + 1,
@@ -125,7 +157,7 @@ router.get('/following', verifyToken, (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao recuperar seguidos');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -133,29 +165,35 @@ router.get('/following', verifyToken, (req: Request, res: Response) => {
  * POST /api/social/follow/:userId
  * Seguir usuário
  */
-router.post('/follow/:userId', verifyToken, (req: Request, res: Response) => {
+router.post('/follow/:userId', verifyToken, (req: Request, res: Response): void => {
   try {
-    const currentUserId = (req as any).userId;
+    const currentUserId = req.user?.id;
+    if (!currentUserId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const targetUserId = Number(req.params.userId);
 
     if (currentUserId === targetUserId) {
-      return res.status(400).json({ error: 'Não pode seguir a si mesmo' });
+      res.status(400).json({ error: 'Não pode seguir a si mesmo' });
+      return;
     }
 
     // Add to following
-    if (!(socialDB.following as any)[currentUserId]) {
-      (socialDB.following as any)[currentUserId] = [];
+    if (!socialDB.following[currentUserId]) {
+      socialDB.following[currentUserId] = [];
     }
-    if (!(socialDB.followers as any)[targetUserId]) {
-      (socialDB.followers as any)[targetUserId] = [];
+    if (!socialDB.followers[targetUserId]) {
+      socialDB.followers[targetUserId] = [];
     }
 
-    const alreadyFollowing = (socialDB.following as any)[currentUserId].some(
-      (u: any) => u.id === targetUserId
+    const alreadyFollowing = socialDB.following[currentUserId].some(
+      (u: SocialUser) => u.id === targetUserId
     );
 
     if (!alreadyFollowing) {
-      (socialDB.following as any)[currentUserId].push({
+      socialDB.following[currentUserId].push({
         id: targetUserId,
         name: 'Usuário ' + targetUserId,
         email: `user${targetUserId}@library.local`,
@@ -163,7 +201,7 @@ router.post('/follow/:userId', verifyToken, (req: Request, res: Response) => {
         followed_at: new Date().toISOString(),
       });
 
-      (socialDB.followers as any)[targetUserId].push({
+      socialDB.followers[targetUserId].push({
         id: currentUserId,
         name: 'Usuário ' + currentUserId,
         email: `user${currentUserId}@library.local`,
@@ -172,18 +210,16 @@ router.post('/follow/:userId', verifyToken, (req: Request, res: Response) => {
       });
     }
 
-    logger.info(
-      `Usuário ${currentUserId} passou a seguir ${targetUserId}`
-    );
+    logger.info(`Usuário ${currentUserId} passou a seguir ${targetUserId}`);
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: `Agora você segue usuário ${targetUserId}`,
-      following_count: (socialDB.following as any)[currentUserId].length,
+      following_count: socialDB.following[currentUserId].length,
     });
   } catch (error) {
     logger.error('Erro ao seguir usuário');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -191,37 +227,40 @@ router.post('/follow/:userId', verifyToken, (req: Request, res: Response) => {
  * DELETE /api/social/unfollow/:userId
  * Deixar de seguir usuário
  */
-router.delete('/unfollow/:userId', verifyToken, (req: Request, res: Response) => {
+router.delete('/unfollow/:userId', verifyToken, (req: Request, res: Response): void => {
   try {
-    const currentUserId = (req as any).userId;
+    const currentUserId = req.user?.id;
+    if (!currentUserId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const targetUserId = Number(req.params.userId);
 
     // Remove from following
-    if ((socialDB.following as any)[currentUserId]) {
-      (socialDB.following as any)[currentUserId] = (socialDB.following as any)[
-        currentUserId
-      ].filter((u: any) => u.id !== targetUserId);
+    if (socialDB.following[currentUserId]) {
+      socialDB.following[currentUserId] = socialDB.following[currentUserId].filter(
+        (u: SocialUser) => u.id !== targetUserId
+      );
     }
 
     // Remove from followers of target
-    if ((socialDB.followers as any)[targetUserId]) {
-      (socialDB.followers as any)[targetUserId] = (socialDB.followers as any)[
-        targetUserId
-      ].filter((u: any) => u.id !== currentUserId);
+    if (socialDB.followers[targetUserId]) {
+      socialDB.followers[targetUserId] = socialDB.followers[targetUserId].filter(
+        (u: SocialUser) => u.id !== currentUserId
+      );
     }
 
-    logger.info(
-      `Usuário ${currentUserId} deixou de seguir ${targetUserId}`
-    );
+    logger.info(`Usuário ${currentUserId} deixou de seguir ${targetUserId}`);
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: `Você deixou de seguir usuário ${targetUserId}`,
-      following_count: (socialDB.following as any)[currentUserId]?.length || 0,
+      following_count: socialDB.following[currentUserId]?.length || 0,
     });
   } catch (error) {
     logger.error('Erro ao deixar de seguir usuário');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -229,34 +268,39 @@ router.delete('/unfollow/:userId', verifyToken, (req: Request, res: Response) =>
  * GET /api/social/feed
  * Feed de atividade social
  */
-router.get('/feed', verifyToken, (req: Request, res: Response) => {
+router.get('/feed', verifyToken, (req: Request, res: Response): void => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
+
     const { limit = 10, offset = 0, filter } = req.query;
 
-    const following = (socialDB.following as any)[userId] || [];
-    const followingIds = following.map((f: any) => f.id);
+    const following = socialDB.following[userId] || [];
+    const followingIds = following.map((f: SocialUser) => f.id);
 
     // Collect activity from followed users
-    let feed: any[] = [];
+    let feed: Activity[] = [];
     followingIds.forEach((followedId: number) => {
-      const userActivity = (socialDB.activity as any)[followedId] || [];
+      const userActivity = socialDB.activity[followedId] || [];
       feed.push(...userActivity);
     });
 
     // Also add own activity
-    const ownActivity = (socialDB.activity as any)[userId] || [];
+    const ownActivity = socialDB.activity[userId] || [];
     feed.push(...ownActivity);
 
     // Sort by date
     feed.sort(
-      (a, b) =>
+      (a: Activity, b: Activity) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     // Filter if provided
     if (filter) {
-      feed = feed.filter((item) => item.type === filter);
+      feed = feed.filter((item: Activity) => item.type === filter);
     }
 
     // Paginate
@@ -264,8 +308,8 @@ router.get('/feed', verifyToken, (req: Request, res: Response) => {
 
     logger.info(`Feed social recuperado para usuário ${userId}`);
 
-    return res.status(200).json({
-      feed: paginated.map((item) => ({
+    res.status(200).json({
+      feed: paginated.map((item: Activity) => ({
         ...item,
         actor_avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.user_id}`,
       })),
@@ -275,7 +319,7 @@ router.get('/feed', verifyToken, (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao recuperar feed social');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -283,25 +327,25 @@ router.get('/feed', verifyToken, (req: Request, res: Response) => {
  * GET /api/social/feed/trending
  * Atividades em tendência
  */
-router.get('/feed/trending', verifyToken, (_req: Request, res: Response) => {
+router.get('/feed/trending', verifyToken, (_req: Request, res: Response): void => {
   try {
     // Get all activities and sort by type frequency + recency
-    const allActivities: any[] = [];
-    Object.values(socialDB.activity).forEach((activities: any) => {
+    const allActivities: Activity[] = [];
+    Object.values(socialDB.activity).forEach((activities: Activity[]) => {
       allActivities.push(...activities);
     });
 
     const trending = allActivities
       .sort(
-        (a, b) =>
+        (a: Activity, b: Activity) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
       .slice(0, 10);
 
     logger.info('Atividades em tendência recuperadas');
 
-    return res.status(200).json({
-      trending_activities: trending.map((item) => ({
+    res.status(200).json({
+      trending_activities: trending.map((item: Activity) => ({
         ...item,
         engagement_score: Math.floor(Math.random() * 100),
       })),
@@ -309,7 +353,7 @@ router.get('/feed/trending', verifyToken, (_req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao recuperar atividades em tendência');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 
@@ -317,19 +361,21 @@ router.get('/feed/trending', verifyToken, (_req: Request, res: Response) => {
  * GET /api/social/stats
  * Estatísticas sociais do usuário
  */
-router.get('/stats', verifyToken, (req: Request, res: Response) => {
+router.get('/stats', verifyToken, (req: Request, res: Response): void => {
   try {
-    const userId = (req as any).userId;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Não autenticado' });
+      return;
+    }
 
-    const followers = (socialDB.followers as any)[userId] || [];
-    const following = (socialDB.following as any)[userId] || [];
-    const activity = (socialDB.activity as any)[userId] || [];
+    const followers = socialDB.followers[userId] || [];
+    const following = socialDB.following[userId] || [];
+    const activity = socialDB.activity[userId] || [];
 
-    logger.info(
-      `Estatísticas sociais recuperadas para usuário ${userId}`
-    );
+    logger.info(`Estatísticas sociais recuperadas para usuário ${userId}`);
 
-    return res.status(200).json({
+    res.status(200).json({
       followers_count: followers.length,
       following_count: following.length,
       posts_count: activity.length,
@@ -340,7 +386,7 @@ router.get('/stats', verifyToken, (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Erro ao recuperar estatísticas sociais');
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
 

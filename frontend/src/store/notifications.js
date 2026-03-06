@@ -13,11 +13,13 @@ export const useNotificationsStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await notificationsAPI.getNotifications(unread_only, type, 50, 0);
-      const notifications = response.data.rows || response.data;
-      const unreadCount = notifications.filter(n => !n.read).length;
+      // Backend returns { notifications: [], total, unread_count, ... }
+      const notifications = response.data.notifications || response.data.rows || response.data || [];
+      const unreadCount = response.data.unread_count ?? notifications.filter(n => !n.read).length;
       set({ notifications, unreadCount, loading: false });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      console.error('Error fetching notifications:', error);
+      set({ error: error.message, loading: false, notifications: [], unreadCount: 0 });
     }
   },
 

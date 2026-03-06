@@ -1,0 +1,366 @@
+/* 
+  🎨 Design Tokens - Sistema de Design Coeso
+  Paleta de cores, tipografia, espaçamentos e animações
+*/
+
+:root {
+  /* 🌈 Paleta de Cores - Moderna e Profissional */
+  
+  /* Cores Primárias */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6; /* Azul principal */
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+
+  /* Cores Secundárias */
+  --secondary-50: #f8fafc;
+  --secondary-100: #f1f5f9;
+  --secondary-200: #e2e8f0;
+  --secondary-300: #cbd5e1;
+  --secondary-400: #94a3b8;
+  --secondary-500: #64748b;
+  --secondary-600: #475569;
+  --secondary-700: #334155;
+  --secondary-800: #1e293b;
+  --secondary-900: #0f172a;
+
+  /* Cores de Sucesso */
+  --success-50: #ecfdf5;
+  --success-100: #d1fae5;
+  --success-200: #a7f3d0;
+  --success-300: #6ee7b7;
+  --success-400: #34d399;
+  --success-500: #10b981; /* Verde sucesso */
+  --success-600: #059669;
+  --success-700: #047857;
+  --success-800: #065f46;
+  --success-900: #064e3b;
+
+  /* Cores de Atenção/Erro */
+  --warning-50: #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-200: #fde68a;
+  --warning-300: #fcd34d;
+  --warning-400: #fbbf24;
+  --warning-500: #f59e0b; /* Laranja alerta */
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+  --warning-800: #92400e;
+  --warning-900: #78350f;
+
+  --error-50: #fef2f2;
+  --error-100: #fee2e2;
+  --error-200: #fecaca;
+  --error-300: #fca5a5;
+  --error-400: #f87171;
+  --error-500: #ef4444; /* Vermelho erro */
+  --error-600: #dc2626;
+  --error-700: #b91c1c;
+  --error-800: #991b1b;
+  --error-900: #7f1d1d;
+
+  /* Cores Neutras */
+  --neutral-50: #fafafa;
+  --neutral-100: #f3f4f6;
+  --neutral-200: #e5e7eb;
+  --neutral-300: #d1d5db;
+  --neutral-400: #9ca3af;
+  --neutral-500: #6b7280;
+  --neutral-600: #4b5563;
+  --neutral-700: #374151;
+  --neutral-800: #1f2937;
+  --neutral-900: #111827;
+
+  /* 📐 Espaçamentos - Sistema de 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* 🖼️ Sombra - Sistema de profundidade */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* 🎭 Transições - Movimentos suaves */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+
+  /* 📱 Tipografia - Sistema hierárquico */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+  --font-size-4xl: 40px;
+  --font-size-5xl: 48px;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* 🔲 Bordas - Sistema consistente */
+  --border-radius-sm: 6px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+  --border-width: 1px;
+
+  /* 🎯 Z-Index - Camadas */
+  --z-dropdown: 1000;
+  --z-modal: 1050;
+  --z-tooltip: 1100;
+  --z-toast: 1200;
+  --z-floating: 1300;
+
+  /* 🌙 Tema - Modo claro por padrão */
+  --bg-primary: var(--neutral-50);
+  --bg-secondary: var(--neutral-100);
+  --bg-tertiary: var(--neutral-200);
+  --bg-card: white;
+  --bg-modal: rgba(17, 24, 39, 0.5);
+  
+  --text-primary: var(--neutral-900);
+  --text-secondary: var(--neutral-600);
+  --text-tertiary: var(--neutral-500);
+  --text-inverse: white;
+  
+  --border-color: var(--neutral-200);
+  --border-color-hover: var(--neutral-300);
+  
+  /* 🎨 Brand Colors - Identidade visual */
+  --brand-primary: var(--primary-500);
+  --brand-secondary: var(--primary-600);
+  --brand-accent: var(--success-500);
+  --brand-warning: var(--warning-500);
+  --brand-danger: var(--error-500);
+}
+
+/* 🌙 Modo Escuro */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: var(--neutral-900);
+    --bg-secondary: var(--neutral-800);
+    --bg-tertiary: var(--neutral-700);
+    --bg-card: var(--neutral-800);
+    --bg-modal: rgba(17, 24, 39, 0.8);
+    
+    --text-primary: var(--neutral-100);
+    --text-secondary: var(--neutral-300);
+    --text-tertiary: var(--neutral-400);
+    --text-inverse: var(--neutral-900);
+    
+    --border-color: var(--neutral-700);
+    --border-color-hover: var(--neutral-600);
+  }
+}
+
+/* 🎨 Classes de Utilitário - Base para componentes */
+.design-tokens {
+  /* Tipografia */
+  --text-xs: var(--font-size-xs);
+  --text-sm: var(--font-size-sm);
+  --text-base: var(--font-size-base);
+  --text-lg: var(--font-size-lg);
+  --text-xl: var(--font-size-xl);
+  --text-2xl: var(--font-size-2xl);
+  --text-3xl: var(--font-size-3xl);
+  --text-4xl: var(--font-size-4xl);
+  --text-5xl: var(--font-size-5xl);
+
+  /* Espaçamentos */
+  --p-1: var(--space-1);
+  --p-2: var(--space-2);
+  --p-3: var(--space-3);
+  --p-4: var(--space-4);
+  --p-5: var(--space-5);
+  --p-6: var(--space-6);
+  --p-8: var(--space-8);
+  --p-10: var(--space-10);
+  --p-12: var(--space-12);
+  --p-16: var(--space-16);
+  --p-20: var(--space-20);
+  --p-24: var(--space-24);
+
+  /* Sombra */
+  --shadow: var(--shadow-md);
+  --shadow-hover: var(--shadow-lg);
+  --shadow-active: var(--shadow-xl);
+
+  /* Transições */
+  --transition: var(--transition-normal);
+  --transition-hover: var(--transition-fast);
+  --transition-transform: transform var(--transition-normal) ease-in-out;
+
+  /* Bordas */
+  --radius-sm: var(--border-radius-sm);
+  --radius-md: var(--border-radius-md);
+  --radius-lg: var(--border-radius-lg);
+  --radius-xl: var(--border-radius-xl);
+}
+
+/* 🎭 Animações Personalizadas */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 🎨 Mixins de Utilitário */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* 🎯 Componentes Base */
+.btn-base {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  border: var(--border-width) solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  user-select: none;
+  outline: none;
+}
+
+.card-base {
+  background: var(--bg-card);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.input-base {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  transition: var(--transition);
+  outline: none;
+  width: 100%;
+}
+
+.input-base:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+/* 🎨 Temas Específicos */
+.theme-dashboard {
+  --brand-primary: #3b82f6;
+  --brand-secondary: #2563eb;
+  --brand-accent: #10b981;
+  --brand-warning: #f59e0b;
+  --brand-danger: #ef4444;
+}
+
+.theme-library {
+  --brand-primary: #8b5cf6;
+  --brand-secondary: #7c3aed;
+  --brand-accent: #06b6d4;
+  --brand-warning: #f59e0b;
+  --brand-danger: #ef4444;
+}
+
+.theme-admin {
+  --brand-primary: #ef4444;
+  --brand-secondary: #dc2626;
+  --brand-accent: #3b82f6;
+  --brand-warning: #f59e0b;
+  --brand-danger: #ef4444;
+}
+
+/* 📱 Responsividade */
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 20px;
+    --font-size-3xl: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --font-size-base: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 20px;
+  }
+}

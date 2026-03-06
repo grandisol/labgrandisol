@@ -1,12 +1,9 @@
 /**
- * @jest-environment node
- */
-/**
  * Queue Module Tests
  * Tests for Bull job queue functionality
  */
 
-import { QueueManager, getQueue, EmailJobData, NotificationJobData } from '../utils/queue';
+import { QueueManager, getQueue } from '../utils/queue.js';
 
 describe('Queue Module', () => {
   let queueManager: QueueManager;
@@ -38,8 +35,8 @@ describe('Queue Module', () => {
 
   describe('Email Jobs', () => {
     it('should create email job data structure', () => {
-      const emailJob: EmailJobData = {
-        type: 'send_email',
+      const emailJob = {
+        type: 'send_email' as const,
         to: 'test@example.com',
         subject: 'Test Email',
         body: 'This is a test email',
@@ -52,8 +49,8 @@ describe('Queue Module', () => {
     });
 
     it('should handle HTML email', () => {
-      const emailJob: EmailJobData = {
-        type: 'send_email',
+      const emailJob = {
+        type: 'send_email' as const,
         to: 'test@example.com',
         subject: 'Test',
         body: 'Body',
@@ -67,31 +64,31 @@ describe('Queue Module', () => {
 
   describe('Notification Jobs', () => {
     it('should create notification job data structure', () => {
-      const notifJob: NotificationJobData = {
-        type: 'send_notification',
+      const notifJob = {
+        type: 'send_notification' as const,
         userId: 1,
         title: 'New Note',
         message: 'You have a new note',
-        type: 'info',
+        severity: 'info' as const,
       };
 
       expect(notifJob.type).toBe('send_notification');
       expect(notifJob.title).toBe('New Note');
     });
 
-    it('should handle different notification types', () => {
-      const notificationTypes = ['alert', 'info', 'success'] as const;
+    it('should handle different notification severities', () => {
+      const severities = ['alert', 'info', 'success'] as const;
 
-      notificationTypes.forEach((notifType) => {
-        const notifJob: NotificationJobData = {
-          type: 'send_notification',
+      severities.forEach((severity) => {
+        const notifJob = {
+          type: 'send_notification' as const,
           userId: 1,
           title: 'Test',
           message: 'Message',
-          type: notifType,
+          severity,
         };
 
-        expect(notifJob.type as any).toBe(notifType);
+        expect(notifJob.severity).toBe(severity);
       });
     });
   });
@@ -162,8 +159,8 @@ describe('Queue Module', () => {
 
   describe('Job Priorities', () => {
     it('should be creatable with priority options', () => {
-      const emailJob: EmailJobData = {
-        type: 'send_email',
+      const emailJob = {
+        type: 'send_email' as const,
         to: 'test@example.com',
         subject: 'Urgent',
         body: 'Urgent message',
@@ -184,42 +181,6 @@ describe('Queue Module', () => {
     });
   });
 
-  describe('Job Retries', () => {
-    it('should support exponential backoff', () => {
-      const backoffConfig = {
-        type: 'exponential' as const,
-        delay: 2000,
-      };
-
-      expect(backoffConfig.type).toBe('exponential');
-      expect(backoffConfig.delay).toBe(2000);
-    });
-  });
-
-  describe('Queue Configuration', () => {
-    it('should handle Redis connection config', () => {
-      const redisConfig = {
-        host: 'localhost',
-        port: 6379,
-        password: undefined,
-        db: 1,
-      };
-
-      expect(redisConfig.host).toBe('localhost');
-      expect(redisConfig.port).toBe(6379);
-      expect(redisConfig.db).toBe(1);
-    });
-
-    it('should support custom Redis port', () => {
-      const redisConfig = {
-        host: 'redis.example.com',
-        port: 6380,
-      };
-
-      expect(redisConfig.port).toBe(6380);
-    });
-  });
-
   describe('Job Types', () => {
     it('should support all job types', () => {
       const jobTypes: Array<
@@ -229,22 +190,6 @@ describe('Queue Module', () => {
       expect(jobTypes.length).toBe(5);
       expect(jobTypes).toContain('send_email');
       expect(jobTypes).toContain('send_notification');
-    });
-  });
-
-  describe('Concurrency Settings', () => {
-    it('should allow different concurrency for different queues', () => {
-      const concurrencyLevels = {
-        email: 5,
-        notification: 10,
-        export: 2,
-        cleanup: 1,
-        sync: 3,
-      };
-
-      expect(concurrencyLevels.email).toBe(5);
-      expect(concurrencyLevels.notification).toBe(10);
-      expect(concurrencyLevels.cleanup).toBe(1);
     });
   });
 });

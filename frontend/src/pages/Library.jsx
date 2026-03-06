@@ -1,50 +1,34 @@
-/**
- * Library Page - Books Catalog
- * Catálogo de livros com busca e filtros
- */
-
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/designTokens.css';
+import '../styles/global.css';
 import '../styles/library.css';
 
-/**
- * @typedef {Object} Book
- * @property {number} id
- * @property {string} title
- * @property {string} author
- * @property {string} category
- * @property {string} cover_url
- * @property {number} average_rating
- * @property {number} available_copies
- * @property {number} total_copies
- */
-
-/**
- * @typedef {Object} Category
- * @property {number} id
- * @property {string} name
- * @property {string} icon
- * @property {string} color
- * @property {number} book_count
- */
-
-const Library = () => {
+ export default function Library() {
+  const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedAuthor, setSelectedAuthor] = useState('');
   const [sortBy, setSortBy] = useState('title');
   const [loading, setLoading] = useState(false);
   const [limit] = useState(20);
   const [offset, setOffset] = useState(0);
 
-  // Carrega categorias ao montar
+  // Get auth token from sessionStorage
+  const getAuthHeaders = () => {
+    const token = sessionStorage.getItem('auth_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const response = await fetch('/api/library/categories');
+        const response = await fetch('/api/library/categories', {
+          headers: getAuthHeaders()
+        });
         const data = await response.json();
-        setCategories(data.categories);
+        setCategories(data.categories || []);
       } catch (error) {
         console.error('Erro carregando categorias:', error);
       }
@@ -52,33 +36,44 @@ const Library = () => {
     loadCategories();
   }, []);
 
-  // Busca livros
   useEffect(() => {
     const loadBooks = async () => {
       setLoading(true);
       try {
         const params = new URLSearchParams({
           limit: limit.toString(),
-          offset: offset.toString(),
-          sortBy
+          offset: offset.toString()
         });
 
-        if (search) params.append('search', search);
+        if (search) params.append('q', search);
         if (selectedCategory) params.append('category', selectedCategory);
-        if (selectedAuthor) params.append('author', selectedAuthor);
 
-        const response = await fetch(`/api/library/books?${params}`);
-        const data = await response.json();
-        setBooks(data.books);
+        const response = await fetch(`/api/library/books?${params}`, {
+          headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Combinar com dados do localStorage
+          const storedBooks = JSON.parse(localStorage.getItem('library_books') || '[]');
+          setBooks([...(data.books || []), ...storedBooks]);
+        } else {
+          // Usar apenas localStorage se API falhar
+          const storedBooks = JSON.parse(localStorage.getItem('library_books') || '[]');
+          setBooks(storedBooks);
+        }
       } catch (error) {
         console.error('Erro carregando livros:', error);
+        // Fallback para localStorage
+        const storedBooks = JSON.parse(localStorage.getItem('library_books') || '[]');
+        setBooks(storedBooks);
       } finally {
         setLoading(false);
       }
     };
 
     loadBooks();
-  }, [search, selectedCategory, selectedAuthor, sortBy, offset, limit]);
+  }, [search, selectedCategory, sortBy, offset, limit]);
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -90,45 +85,38 @@ const Library = () => {
     setOffset(0);
   };
 
+const handleBookClick = (bookId) => {
+    navigate(`/library/${bookId}`);
+  };
+
   return (
     <div className="library-page">
       <div className="library-header">
-        <h1>📚 Biblioteca de Livros</h1>
-        <p>Acervo completo com {books.length} livros disponíveis</p>
+        <div className="header-content">
+          <div className="header-ornament">❧</div>
+          <h1>Biblioteca</h1>
+          <p>Explore nosso acervo de {books.length} obras disponíveis</p>
+        </div>
       </div>
 
-      <div className="library-controls">
-        {/* Search Bar */}
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Buscar livros por título ou autor..."
-            value={search}
-            onChange={handleSearch}
-            className="search-input"
-          />
-          <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-        </div>
-
-        {/* Filters */}
-        <div className="filters-section">
-          <div className="filter-group">
-            <label>Categoria:</label>
-            <div className="category-buttons">
+      <div className="library-content">
+        {/* Sidebar with Categories */}
+        <aside className="library-sidebar">
+          <div className="sidebar-section">
+            <h3>Categorias</h3>
+            <div className="category-list">
+              <button
+                className={`category-item ${selectedCategory === '' ? 'active' : ''}`}
+                onClick={() => handleCategorySelect('')}
+              >
+                <span className="category-icon">📚</span>
+                <span>Todas</span>
+              </button>
               {categories.map(cat => (
                 <button
                   key={cat.id}
-                  className={`category-btn ${selectedCategory === cat.name ? 'active' : ''}`}
+                  className={`category-item ${selectedCategory === cat.name ? 'active' : ''}`}
                   onClick={() => handleCategorySelect(cat.name)}
-                  style={{
-                    color: selectedCategory === cat.name ? 'white' : cat.color,
-                    borderColor: cat.color,
-                    backgroundColor: selectedCategory === cat.name ? cat.color : 'transparent'
-                  }}
-                  title={`${cat.book_count} livros`}
                 >
                   <span className="category-icon">{cat.icon}</span>
                   <span>{cat.name}</span>
@@ -136,84 +124,113 @@ const Library = () => {
               ))}
             </div>
           </div>
+        </aside>
 
-          <div className="filter-group">
-            <label>Ordenar por:</label>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="sort-select">
-              <option value="title">Título (A-Z)</option>
-              <option value="publication_year">Ano de Publicação</option>
-              <option value="average_rating">Avaliação</option>
-              <option value="author">Autor</option>
-            </select>
+        {/* Main Content */}
+        <main className="library-main">
+          {/* Search and Controls */}
+          <div className="library-controls">
+            <div className="search-box">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Buscar por título ou autor..."
+                value={search}
+                onChange={handleSearch}
+                className="search-input"
+              />
+            </div>
+
+            <div className="sort-control">
+              <label>Ordenar por:</label>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="title">Título</option>
+                <option value="publication_year">Ano</option>
+                <option value="average_rating">Avaliação</option>
+                <option value="author">Autor</option>
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Books Grid */}
-      <div className="books-container">
-        {loading ? (
-          <div className="loading">Carregando livros...</div>
-        ) : books.length > 0 ? (
-          <div className="books-grid">
-            {books.map(book => (
-              <div key={book.id} className="book-card">
-                <div className="book-cover">
-                  <img src={book.cover_url || '/default-book.png'} alt={book.title} />
-                  <div className="book-overlay">
-                    <button className="btn-details">Ver Detalhes</button>
-                    <button className="btn-borrow">Emprestar</button>
-                  </div>
-                </div>
-                <div className="book-info">
-                  <h3 className="book-title">{book.title}</h3>
-                  <p className="book-author">{book.author}</p>
-                  <div className="book-meta">
-                    <span className="category">{book.category}</span>
-                    {book.average_rating > 0 && (
-                      <span className="rating">⭐ {book.average_rating.toFixed(1)}</span>
-                    )}
-                  </div>
-                  <div className="book-status">
-                    <span className={`availability ${book.available_copies > 0 ? 'available' : 'unavailable'}`}>
-                      {book.available_copies > 0 
-                        ? `${book.available_copies}/${book.total_copies} disponíveis` 
-                        : 'Indisponível'}
-                    </span>
-                  </div>
-                </div>
+          {/* Books Grid */}
+          <div className="books-section">
+            {loading ? (
+              <div className="loading">
+                <span>Carregando acervo...</span>
               </div>
-            ))}
+            ) : books.length > 0 ? (
+              <div className="books-grid">
+                {books.map(book => (
+                  <div 
+                    key={book.id} 
+                    className="book-card"
+                    onClick={() => handleBookClick(book.id)}
+                  >
+                    <div className="book-cover">
+                      {book.cover_url ? (
+                        <img src={book.cover_url} alt={book.title} />
+                      ) : (
+                        <div className="book-placeholder">
+                          <span>📖</span>
+                        </div>
+                      )}
+                      {book.available_copies > 0 && (
+                        <div className="available-badge">Disponível</div>
+                      )}
+                    </div>
+                    <div className="book-info">
+                      <h3 className="book-title">{book.title}</h3>
+                      <p className="book-author">{book.author}</p>
+                      <div className="book-meta">
+                        <span className="book-category">{book.category}</span>
+                        {book.average_rating > 0 && (
+                          <span className="book-rating">⭐ {book.average_rating.toFixed(1)}</span>
+                        )}
+                      </div>
+                      <div className="book-availability">
+                        <span className={book.available_copies > 0 ? 'available' : 'unavailable'}>
+                          {book.available_copies > 0 
+                            ? `${book.available_copies} de ${book.total_copies}` 
+                            : 'Indisponível'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-results">
+                <div className="no-results-icon">📚</div>
+                <h3>Nenhum livro encontrado</h3>
+                <p>Tente ajustar os filtros ou a busca</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="no-results">
-            <p>Nenhum livro encontrado com esses critérios</p>
-          </div>
-        )}
-      </div>
 
-      {/* Pagination */}
-      {books.length > 0 && (
-        <div className="pagination">
-          <button
-            disabled={offset === 0}
-            onClick={() => setOffset(Math.max(0, offset - limit))}
-            className="btn-pagination"
-          >
-            ← Anterior
-          </button>
-          <span className="pagination-info">
-            Página {Math.floor(offset / limit) + 1} • Mostrando {books.length} livros
-          </span>
-          <button
-            onClick={() => setOffset(offset + limit)}
-            className="btn-pagination"
-          >
-            Próxima →
-          </button>
-        </div>
-      )}
+          {/* Pagination */}
+          {books.length > 0 && (
+            <div className="pagination">
+              <button
+                className="btn btn-secondary"
+                disabled={offset === 0}
+                onClick={() => setOffset(Math.max(0, offset - limit))}
+              >
+                ← Anterior
+              </button>
+              <span className="pagination-info">
+                Página {Math.floor(offset / limit) + 1}
+              </span>
+              <button
+                className="btn btn-secondary"
+                onClick={() => setOffset(offset + limit)}
+                disabled={books.length < limit}
+              >
+                Próxima →
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
-};
-
-export default Library;
+}

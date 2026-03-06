@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - LabGrandisol</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 500px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon {
+      font-size: 80px;
+      margin-bottom: 24px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+
+    .retry-btn {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+    }
+
+    .retry-btn:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      margin-top: 32px;
+      padding: 16px;
+      background: rgba(30, 41, 59, 0.8);
+      border-radius: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .status-item:last-child {
+      border-bottom: none;
+    }
+
+    .status-label {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .status-value {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .status-value.online {
+      color: #22c55e;
+    }
+
+    .status-value.offline {
+      color: #ef4444;
+    }
+
+    .cached-pages {
+      margin-top: 24px;
+      text-align: left;
+    }
+
+    .cached-pages h3 {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+
+    .cached-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cached-link {
+      background: rgba(99, 102, 241, 0.1);
+      color: #818cf8;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .cached-link:hover {
+      background: rgba(99, 102, 241, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .logo {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #6366f1;
+    }
+
+    .logo-icon {
+      font-size: 24px;
+    }
+
+    .tips {
+      margin-top: 32px;
+      padding: 16px;
+      background: rgba(34, 197, 94, 0.1);
+      border-radius: 12px;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .tips h3 {
+      color: #22c55e;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .tips ul {
+      list-style: none;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .tips li {
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .tips li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #22c55e;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <span class="logo-icon">📖</span>
+    <span>LabGrandisol</span>
+  </div>
+
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>Você está offline</h1>
+    <p>
+      Não foi possível conectar ao servidor. Verifique sua conexão com a internet 
+      e tente novamente. Algumas páginas podem estar disponíveis no cache.
+    </p>
+
+    <button class="retry-btn" onclick="tryReconnect()">
+      🔄 Tentar novamente
+    </button>
+
+    <div class="status">
+      <div class="status-item">
+        <span class="status-label">Conexão</span>
+        <span class="status-value offline" id="connection-status">Offline</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Última sincronização</span>
+        <span class="status-value" id="last-sync">--</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Cache</span>
+        <span class="status-value online" id="cache-status">Disponível</span>
+      </div>
+    </div>
+
+    <div class="cached-pages">
+      <h3>Páginas disponíveis offline:</h3>
+      <div class="cached-list">
+        <a href="/library" class="cached-link">📚 Biblioteca</a>
+        <a href="/museum" class="cached-link">🌿 Almanaque</a>
+        <a href="/search" class="cached-link">🔍 Busca</a>
+        <a href="/dashboard" class="cached-link">📊 Painel</a>
+      </div>
+    </div>
+
+    <div class="tips">
+      <h3>Dicas</h3>
+      <ul>
+        <li>Verifique se o Wi-Fi está ativado</li>
+        <li>Tente desativar e reativar a conexão</li>
+        <li>Seus dados serão sincronizados quando voltar online</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Atualizar última sincronização
+    const lastSync = localStorage.getItem('lastSync');
+    if (lastSync) {
+      document.getElementById('last-sync').textContent = formatTime(new Date(lastSync));
+    } else {
+      document.getElementById('last-sync').textContent = 'Não sincronizado';
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+
+    async function tryReconnect() {
+      const btn = document.querySelector('.retry-btn');
+      const status = document.getElementById('connection-status');
+      
+      btn.textContent = '⏳ Conectando...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('/api/health', { 
+          method: 'HEAD',
+          cache: 'no-store'
+        });
+
+        if (response.ok) {
+          status.textContent = 'Online';
+          status.className = 'status-value online';
+          localStorage.setItem('lastSync', new Date().toISOString());
+          
+          btn.textContent = '✅ Conectado!';
+          
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          throw new Error('Server error');
+        }
+      } catch (error) {
+        status.textContent = 'Offline';
+        status.className = 'status-value offline';
+        btn.textContent = '🔄 Tentar novamente';
+        btn.disabled = false;
+        
+        // Shake animation
+        btn.style.animation = 'shake 0.5s ease';
+        setTimeout(() => btn.style.animation = '', 500);
+      }
+    }
+
+    // Escutar mudanças de conexão
+    window.addEventListener('online', () => {
+      document.getElementById('connection-status').textContent = 'Online';
+      document.getElementById('connection-status').className = 'status-value online';
+      localStorage.setItem('lastSync', new Date().toISOString());
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    });
+
+    window.addEventListener('offline', () => {
+      document.getElementById('connection-status').textContent = 'Offline';
+      document.getElementById('connection-status').className = 'status-value offline';
+    });
+
+    // Verificar conexão periodicamente
+    setInterval(async () => {
+      if (navigator.onLine) {
+        try {
+          const response = await fetch('/api/health', { 
+            method: 'HEAD',
+            cache: 'no-store'
+          });
+          if (response.ok) {
+            document.getElementById('connection-status').textContent = 'Online';
+            document.getElementById('connection-status').className = 'status-value online';
+          }
+        } catch (e) {
+          document.getElementById('connection-status').textContent = 'Offline';
+          document.getElementById('connection-status').className = 'status-value offline';
+        }
+      }
+    }, 30000);
+
+    // Adicionar animação shake
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

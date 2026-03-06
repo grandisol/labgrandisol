@@ -52,10 +52,11 @@ export interface Loan {
   id: number;
   user_id: number;
   book_id: number;
-  borrow_date: Date;
-  due_date: Date;
-  return_date: Date | null;
+  borrow_date: Date | string;
+  due_date: Date | string;
+  return_date: Date | string | null;
   status: 'active' | 'returned';
+  renewal_count: number;
 }
 
 export interface Rating {
@@ -79,8 +80,8 @@ export interface ReadingList {
 const users: User[] = [
   {
     id: 1,
-    email: 'admin@library.local',
-    password_hash: '$2b$10$qPXnzKsRjUKQQqPNvBoq6ecW.d7jvRtjLMKXKKJCE/Cq2ywD9VgJ2', // password: admin123
+    email: 'admin@labgrandisol.com',
+    password_hash: 'admin123', // Senha simples para desenvolvimento
     name: 'Administrador',
     role: 'admin',
     status: 'active',
@@ -88,12 +89,21 @@ const users: User[] = [
   },
   {
     id: 2,
-    email: 'usuario@library.local',
-    password_hash: '$2b$10$qPXnzKsRjUKQQqPNvBoq6ecW.d7jvRtjLMKXKKJCE/Cq2ywD9VgJ2', // password: user123
-    name: 'Usuário Teste',
+    email: 'usuario@labgrandisol.com',
+    password_hash: 'user123', // Senha simples para desenvolvimento
+    name: 'João Silva',
     role: 'user',
     status: 'active',
     created_at: new Date('2026-01-15'),
+  },
+  {
+    id: 3,
+    email: 'maria@labgrandisol.com',
+    password_hash: 'maria123',
+    name: 'Maria Santos',
+    role: 'user',
+    status: 'active',
+    created_at: new Date('2026-02-01'),
   },
 ];
 
@@ -101,25 +111,67 @@ const authors: Author[] = [
   {
     id: 1,
     name: 'George Orwell',
-    biography: 'Escritor e jornalista inglês, conhecido por seus romances de ficção científica.',
+    biography: 'Escritor e jornalista inglês, conhecido por seus romances de ficção científica distópica como 1984 e A Revolução dos Bichos.',
     created_at: new Date(),
   },
   {
     id: 2,
     name: 'J.R.R. Tolkien',
-    biography: 'Filólogo e escritor britânico, criador do mundo de Middle-earth.',
+    biography: 'Filólogo e escritor britânico, criador do mundo de Middle-earth e autor de O Hobbit e O Senhor dos Anéis.',
     created_at: new Date(),
   },
   {
     id: 3,
     name: 'Stephen Hawking',
-    biography: 'Físico teórico e cosmólogo inglês, especialista em buracos negros.',
+    biography: 'Físico teórico e cosmólogo inglês, especialista em buracos negros e autor de best-sellers científicos.',
     created_at: new Date(),
   },
   {
     id: 4,
     name: 'Yuval Noah Harari',
-    biography: 'Historiador israelense, autor de best-sellers sobre história da humanidade.',
+    biography: 'Historiador israelense, autor de best-sellers sobre história da humanidade como Sapiens e Homo Deus.',
+    created_at: new Date(),
+  },
+  {
+    id: 5,
+    name: 'Miguel de Cervantes',
+    biography: 'Escritor espanhol, autor de Don Quixote, considerada uma das obras fundamentais da literatura ocidental.',
+    created_at: new Date(),
+  },
+  {
+    id: 6,
+    name: 'Gabriel García Márquez',
+    biography: 'Escritor colombiano, premio Nobel de Literatura, mestre do realismo mágico.',
+    created_at: new Date(),
+  },
+  {
+    id: 7,
+    name: 'Charles Darwin',
+    biography: 'Naturalista inglês, formulou a teoria da evolução por seleção natural.',
+    created_at: new Date(),
+  },
+  {
+    id: 8,
+    name: 'Richard Dawkins',
+    biography: 'Biólogo evolucionista británico, autor de O Gene Egoísta e defensor do ateísmo.',
+    created_at: new Date(),
+  },
+  {
+    id: 9,
+    name: 'Dan Brown',
+    biography: 'Escritor americano, autor de best-sellers como O Código Da Vinci, Anjos e Demônios.',
+    created_at: new Date(),
+  },
+  {
+    id: 10,
+    name: 'Walter Isaacson',
+    biography: 'Jornalista americano, autor de biografias de Steve Jobs, Benjamin Franklin e Albert Einstein.',
+    created_at: new Date(),
+  },
+  {
+    id: 11,
+    name: 'Napoleon Hill',
+    biography: 'Escritor americano, autor de Pense e Enriqueça, um dos livros de autoajuda mais vendidos da história.',
     created_at: new Date(),
   },
 ];
@@ -169,8 +221,8 @@ const books: Book[] = [
     author_id: 1,
     category_id: 1,
     isbn: '978-0451524935',
-    description: 'Um romance distópico sobre um regime totalitário que controla todos os aspectos da vida.',
-    cover_url: 'https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400',
+    description: 'Um romance distópico sobre um regime totalitário que controla todos os aspectos da vida. Winston Smith trabalha no Ministério da Verdade, reescrevendo a história conforme as necessidades do Partido. Mas ele questiona o sistema e começa a elaborar um plano de resistência.',
+    cover_url: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400',
     pages: 328,
     published_year: 1949,
     available_copies: 3,
@@ -183,8 +235,8 @@ const books: Book[] = [
     author_id: 2,
     category_id: 1,
     isbn: '978-0544003415',
-    description: 'Uma jornada épica através de um mundo mágico para destruir um artefato de poder absoluto.',
-    cover_url: 'https://images.unsplash.com/photo-1516302752625-fcc3c50ae61f?w=400',
+    description: 'Uma jornada épica através de um mundo mágico para destruir um artefato de poder absoluto. Frodo Baggins herda o Um Anel e deve travelhar até a Montanha da Perdição para destruí-lo.',
+    cover_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400',
     pages: 1216,
     published_year: 1954,
     available_copies: 2,
@@ -197,8 +249,8 @@ const books: Book[] = [
     author_id: 3,
     category_id: 2,
     isbn: '978-0553380163',
-    description: 'Uma exploração dos buracos negros, do Big Bang e da natureza do tempo e do universo.',
-    cover_url: 'https://images.unsplash.com/photo-1519452575417-564c1401ecc0?w=400',
+    description: 'Uma exploração acessível dos buracos negros, do Big Bang e da natureza do tempo e do universo. Stephen Hawking apresenta os conceitos fundamentais da cosmologia moderna.',
+    cover_url: 'https://images.unsplash.com/photo-1462536943532-57a629f6cc60?w=400',
     pages: 256,
     published_year: 1988,
     available_copies: 4,
@@ -211,7 +263,7 @@ const books: Book[] = [
     author_id: 4,
     category_id: 3,
     isbn: '978-0062316097',
-    description: 'Uma história da humanidade desde o surgimento dos Homo sapiens até os dias atuais.',
+    description: 'Uma história da humanidade desde o surgimento dos Homo sapiens até os dias atuais. Yuval Noah Harari explora como a cognição, a agricultura e a religião moldaram nossa espécie.',
     cover_url: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400',
     pages: 498,
     published_year: 2014,
@@ -219,16 +271,140 @@ const books: Book[] = [
     total_copies: 6,
     created_at: new Date(),
   },
+  {
+    id: 5,
+    title: 'Dom Quixote',
+    author_id: 5,
+    category_id: 1,
+    isbn: '978-0060934347',
+    description: 'A história de umidalgo espanhol que enlouquece lendo romances de cavalaria e parte em aventuras com seu escudeiro Sancho Pança.',
+    cover_url: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400',
+    pages: 1023,
+    published_year: 1605,
+    available_copies: 3,
+    total_copies: 4,
+    created_at: new Date(),
+  },
+  {
+    id: 6,
+    title: 'Cem Anos de Solidão',
+    author_id: 6,
+    category_id: 1,
+    isbn: '978-0060883287',
+    description: 'A saga da família Buendía na cidade fictícia de Macondo, misturando realismo mágico com história latino-americana.',
+    cover_url: 'https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=400',
+    pages: 417,
+    published_year: 1967,
+    available_copies: 4,
+    total_copies: 5,
+    created_at: new Date(),
+  },
+  {
+    id: 7,
+    title: 'A Origem das Espécies',
+    author_id: 7,
+    category_id: 2,
+    isbn: '978-0451529060',
+    description: 'A obra fundamental de Charles Darwin que estabeleceu a teoria da evolução por seleção natural.',
+    cover_url: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400',
+    pages: 576,
+    published_year: 1859,
+    available_copies: 2,
+    total_copies: 3,
+    created_at: new Date(),
+  },
+  {
+    id: 8,
+    title: 'O Gene Egoísta',
+    author_id: 8,
+    category_id: 2,
+    isbn: '978-0198788607',
+    description: 'Richard Dawkins explora a evolução do ponto de vista dos genes, argumentando que somos máquinas de sobrevivência para o DNA.',
+    cover_url: 'https://images.unsplash.com/photo-1507842217343-583f7270bfba?w=400',
+    pages: 360,
+    published_year: 1976,
+    available_copies: 3,
+    total_copies: 4,
+    created_at: new Date(),
+  },
+  {
+    id: 9,
+    title: 'O Hobbit',
+    author_id: 2,
+    category_id: 1,
+    isbn: '978-0547928227',
+    description: 'A aventura de Bilbo Bolseiro que descobre um anel mágico e acompaña Gandalf e anões em uma missão para recuperar o Reino de Erebor.',
+    cover_url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
+    pages: 310,
+    published_year: 1937,
+    available_copies: 5,
+    total_copies: 6,
+    created_at: new Date(),
+  },
+  {
+    id: 10,
+    title: 'O Código Da Vinci',
+    author_id: 9,
+    category_id: 1,
+    isbn: '978-0307474278',
+    description: 'Um thriller que segue Robert Langdon decifrando pistas deixadas por Leonardo da Vinci para revelar um segredo que poderia mudar a história da igreja.',
+    cover_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=400',
+    pages: 489,
+    published_year: 2003,
+    available_copies: 4,
+    total_copies: 5,
+    created_at: new Date(),
+  },
+  {
+    id: 11,
+    title: 'Steve Jobs',
+    author_id: 10,
+    category_id: 4,
+    isbn: '978-1451648539',
+    description: 'A biografia definitiva de Steve Jobs baseada em mais de quarenta entrevistas com Jobs realizadas ao longo de dois anos.',
+    cover_url: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400',
+    pages: 656,
+    published_year: 2011,
+    available_copies: 3,
+    total_copies: 4,
+    created_at: new Date(),
+  },
+  {
+    id: 12,
+    title: 'Pense e Enriqueça',
+    author_id: 11,
+    category_id: 5,
+    isbn: '978-1585424337',
+    description: 'Um dos livros de autoajuda mais vendidos de todos os tempos, apresentando treze princípios para alcançar o sucesso financeiro.',
+    cover_url: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=400',
+    pages: 238,
+    published_year: 1937,
+    available_copies: 6,
+    total_copies: 8,
+    created_at: new Date(),
+  },
 ];
 
-const loans: Loan[] = [];
+const loans: Loan[] = [
+  {
+    id: 1,
+    user_id: 2,
+    book_id: 1,
+    borrow_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    due_date: new Date(Date.now() + 23 * 24 * 60 * 60 * 1000),
+    return_date: null,
+    status: 'active',
+    renewal_count: 0,
+  },
+];
+
 const ratings: Rating[] = [
   {
     id: 1,
     user_id: 2,
     book_id: 1,
     rating: 5,
-    review: 'Livro excelente, muito envolvente e perturbador.',
+    review: 'Livro excelente, muito envolvente e perturbador. Uma leitura obrigatória para entender os perigos do totalitarismo.',
     created_at: new Date(),
   },
   {
@@ -236,7 +412,23 @@ const ratings: Rating[] = [
     user_id: 2,
     book_id: 4,
     rating: 5,
-    review: 'Perspectiva fascinante sobre a história humana.',
+    review: 'Perspectiva fascinante sobre a história humana. Muito bem escrito e acessível.',
+    created_at: new Date(),
+  },
+  {
+    id: 3,
+    user_id: 3,
+    book_id: 2,
+    rating: 5,
+    review: 'Obra-prima da literatura fantástica. Tolkien criou um mundo inesquecível.',
+    created_at: new Date(),
+  },
+  {
+    id: 4,
+    user_id: 3,
+    book_id: 9,
+    rating: 4,
+    review: 'Uma aventura divertida, perfeita para introduzir o universo de Tolkien.',
     created_at: new Date(),
   },
 ];
@@ -254,6 +446,27 @@ const readingLists: ReadingList[] = [
     user_id: 2,
     book_id: 3,
     status: 'reading',
+    created_at: new Date(),
+  },
+  {
+    id: 3,
+    user_id: 3,
+    book_id: 1,
+    status: 'finished',
+    created_at: new Date(),
+  },
+  {
+    id: 4,
+    user_id: 3,
+    book_id: 4,
+    status: 'reading',
+    created_at: new Date(),
+  },
+  {
+    id: 5,
+    user_id: 3,
+    book_id: 6,
+    status: 'want_to_read',
     created_at: new Date(),
   },
 ];
@@ -355,6 +568,7 @@ export const mockDB = {
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
       return_date: null,
       status: 'active',
+      renewal_count: 0,
     };
     loans.push(loan);
     return loan;

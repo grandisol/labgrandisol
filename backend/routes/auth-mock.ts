@@ -3,6 +3,7 @@
  */
 
 import { Router, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { generateToken, generateRefreshToken } from '../middleware/auth.js';
 import Logger from '../utils/logger.js';
 import { mockDB } from '../utils/mockDatabase.js';
@@ -74,9 +75,8 @@ router.post('/login', (req: Request, res: Response): void => {
       return;
     }
 
-    // MOCK: Aceitar qualquer senha que comece com a primeira letra do nome
-    // Em produção, usar bcrypt.compare(password, user.password_hash)
-    const isPasswordValid = password === 'admin123' || password === 'user123' || password === 'test123';
+    // MOCK: Comparar senha diretamente (em produção, usar bcrypt.compare)
+    const isPasswordValid = password === user.password_hash;
 
     if (!isPasswordValid) {
       logger.warn('Tentativa de login com senha incorreta', { email });
@@ -159,6 +159,73 @@ router.post('/register', (req: Request, res: Response): void => {
     logger.error('Erro ao registrar usuário', error as Error);
     res.status(500).json({ error: 'Erro ao registrar usuário' });
   }
+});
+
+/**
+ * POST /api/auth/refresh
+ * Renovar access token usando refresh token
+ */
+router.post('/refresh', (req: Request, res: Response): void => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      res.status(400).json({ error: 'Refresh token é obrigatório' });
+      return;
+    }
+
+    // Verificar refresh token
+    const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_super_secreta_aqui_mudeme_em_producao';
+
+    try {
+      const decoded = jwt.verify(refreshToken, JWT_SECRET + '_refresh') as { id: number; email: string; type: string };
+
+      if (decoded.type !== 'refresh') {
+        res.status(401).json({ error: 'Token inválido' });
+        return;
+      }
+
+      // Buscar usuário
+      const user = mockDB.getUserById(decoded.id);
+      if (!user) {
+        res.status(401).json({ error: 'Usuário não encontrado' });
+        return;
+      }
+
+      // Gerar novos tokens
+      const newToken = generateToken(user);
+      const newRefreshToken = generateRefreshToken(user);
+
+      logger.info('Token renovado', { email: user.email });
+
+      res.json({
+        token: newToken,
+        refreshToken: newRefreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        expiresIn: 86400,
+      });
+    } catch (jwtError) {
+      res.status(401).json({ error: 'Refresh token inválido ou expirado' });
+      return;
+    }
+  } catch (error) {
+    logger.error('Erro ao renovar token', error as Error);
+    res.status(500).json({ error: 'Erro ao renovar token' });
+  }
+});
+
+/**
+ * POST /api/auth/logout
+ * Logout do usuário
+ */
+router.post('/logout', (_req: Request, res: Response): void => {
+  // Em um sistema real, invalidaríamos o refresh token no banco
+  res.json({ message: 'Logout realizado com sucesso' });
 });
 
 export default router;
